@@ -28,7 +28,7 @@
     this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
     this.scene.add( this.camera );
 
-    this.renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0xfbe4d4, clearAlpha: 1.0 } );
+    this.renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0xdddddd, clearAlpha: 1.0 } );
     this.renderer.setSize( window.innerWidth, window.innerHeight );
     this.gl = this.renderer._gl;
 
@@ -46,7 +46,9 @@
     this.video.height = height;
     this.video.autoplay = true;
 
-    document.body.appendChild(this.canvas);
+    if (params.debug) {
+      document.body.appendChild(this.canvas);
+    }
 
     this.hasUserMedia = navigator.webkitGetUserMedia ? true : false;
 

@@ -343,12 +343,18 @@
   _.extend(Worm, {
 
     Colors: [
-      0xb04a8f,
-      0x5e289f,
-      0x903d96,
-      0xff0000,
-      0x00AEEF,
-      0x00EDA9
+      0xefefef,
+      0xcccccc,
+      0xaaaaaa,
+      0x333333,
+      0x666666,
+      0x999999
+      // 0xb04a8f,
+      // 0x5e289f,
+      // 0x903d96,
+      // 0xff0000,
+      // 0x00AEEF,
+      // 0x00EDA9
     ]
 
   })
