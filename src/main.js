@@ -6,6 +6,7 @@
   var bStats =  true;
   var camera;
   var geo;
+  var sphere;
   var emitter;
   var count = 0;
   var worms = [];
@@ -13,8 +14,6 @@
   _.extend(BaseApp.prototype, {
 
     draw: function() {
-
-      // console.log(this.meter);
 
       this.renderer.render( this.scene, camera, this.renderTarget.color, true );
       this.renderer.render( this.postScene, this.postCamera, null, true );
@@ -41,6 +40,62 @@
 		"colorC": { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) }
 
     };
+
+    this.texture = new THREE.Texture( this.canvas );
+    this.texture.magFilter = THREE.LinearMipMapLinearFilter;
+    this.texture.minFilter = THREE.LinearMipMapLinearFilter;
+
+    this.displacementMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        'map': { type: 't', value: 0, texture: this.texture },
+        'offset_x': { type: 'f', value: 0 },
+        'offset_y': { type: 'f', value: 0 }
+      },
+      vertexShader: [
+
+        'uniform float offset_x;',
+        'uniform float offset_y;',
+        'uniform sampler2D map;',
+        'varying float dist;',
+
+        'varying vec2 vUv;',
+
+        'void main() {',
+
+        'vUv = ( uv / 3.0 ) + vec2( offset_x, offset_y );',
+        'vUv.x = mod(vUv.x, 1.0);',
+        'vUv.y = mod(vUv.y, 1.0);',
+
+        'vec4 color = texture2D(map, vUv);',
+        'dist = (color.r + color.g + color.b) / 3.0;',
+
+        'vec4 pos = vec4(position + position * dist, 1.0);',
+        'gl_Position = projectionMatrix * modelViewMatrix * pos;',
+
+        '}'
+
+      ].join('\n'),
+      fragmentShader: [
+
+      'uniform sampler2D map;',
+
+      'varying vec2 vUv;',
+
+      'varying float dist;',
+
+      'void main() {',
+
+      // 'gl_FragColor = texture2D(map, vUv) * vec4(vec3(dist), 1.);',
+      'gl_FragColor = vec4(vec3(dist), 1.);',
+
+      '}'
+
+      ].join('\n')
+    });
+
+    sphere = new THREE.Mesh( new THREE.SphereGeometry(1, 100, 100), this.displacementMaterial);
+    sphere.doubleSided = true;
+    this.scene.add(sphere);
 
     this.postMaterial = new THREE.ShaderMaterial({
 
@@ -140,11 +195,11 @@
       this.scene.add( pointLight );
 
       //load some geometry
-      geo = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 1 ), new THREE.MeshNormalMaterial({ shading: THREE.FlatShading }) );
+      // geo = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 1 ), new THREE.MeshNormalMaterial({ shading: THREE.FlatShading }) );
       // geo.geometry.computeNormals();
-      geo.geometry.computeVertexNormals();
-      geo.geometry.computeFaceNormals();
-      geo.geometry.computeCentroids();
+      // geo.geometry.computeVertexNormals();
+      // geo.geometry.computeFaceNormals();
+      // geo.geometry.computeCentroids();
 
       // this.scene.add( geo );
 
@@ -153,16 +208,6 @@
                                        renderer: this.renderer,
                                        maxParticleCount: 10000,
                                        camera: camera });
-
-  for(var i=0; i<100; i++){
-
-    var worm = new Worm();
-     worms.push( worm );
-     worm.reset(geo);
-
-     this.scene.add( worm.mesh );
-
-  }
 
       // Post processing scene
   this.postScene = new THREE.Scene();
@@ -180,6 +225,16 @@
   this.postQuad.doubleSided = true;
   this.postScene.add( this.postQuad );
 
+  for(var i=0; i<100; i++){
+
+    var worm = new Worm();
+     worms.push( worm );
+     worm.reset( sphere );
+
+     this.scene.add( worm.mesh );
+
+  }
+
   // End post processing scene
 
     },
@@ -188,8 +243,8 @@
 
        if(bStats) stats.update();
 
-       geo.rotation.x += .005;
-       geo.rotation.y += .0005;
+       // geo.rotation.x += .005;
+       // geo.rotation.y += .0005;
 
        count += .001;
        var target = worms[0].geometry.vertices[0].position;
@@ -207,7 +262,7 @@
           worms[i].vel.multiplyScalar( .91 );
           worms[i].vel.subSelf( delta );
 
-          worms[i].update(geo);
+          worms[i].update(sphere);
 
        });
 
@@ -237,6 +292,8 @@
              emitter.removeParticle( i );
           }
        }
+
+       this.texture.needsUpdate = true;
 
     }
 

@@ -34,8 +34,6 @@
 
     document.body.appendChild(this.renderer.domElement);
 
-    this.setup(params.debug);
-
     var width = params.width || 640, height = params.height || 480;
 
     this.canvas = document.createElement('canvas');
@@ -48,6 +46,8 @@
     this.video.height = height;
     this.video.autoplay = true;
 
+    document.body.appendChild(this.canvas);
+
     this.hasUserMedia = navigator.webkitGetUserMedia ? true : false;
 
     if (this.hasUserMedia) {
@@ -59,6 +59,8 @@
       });
 
     }
+
+    this.setup(params.debug);
 
     return this;
 
