@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<link href='http://fonts.googleapis.com/css?family=Terminal+Dosis' rel='stylesheet' type='text/css'>
 		<script type="text/javascript">
 
 			window.onload = function() {
@@ -20,12 +21,112 @@
 		<style>
 			*{
 				margin: 0;
+				padding: 0;
+			}
+
+			body {
+				font-family: 'Terminal Dosis', sans-serif;
+			}
+
+			#title {
+				position: fixed;
+				top: 0px;
+				left: 0px;
+				background-color: black;
+				width: 100%;
+				padding-bottom: 25px;
+
 
 			}
+
+			#title h1, h2 {
+				margin-left: 20px;
+				color: #ffffff;
+
+			}
+
+			#title h1{
+				margin-top: 20px;
+				letter-spacing: 1px;
+				font-size: 16pt;
+
+			}
+
+			#title h2{
+			margin-top: 2px;
+			font-size: 10pt;
+
+			}
+
+			ul {
+				list-style-type: none;
+				vertical-align: baseline;
+			}
+
+			#letters {
+				display: block;
+				float: right;
+				margin-right: 20px;
+			}
+
+			#desc {
+				display: block;
+			}
+
+			h3, p {
+				color: #b3b3b3;
+				margin-right: 20%;
+				font-size: 10pt;
+			}
+
+			.column {
+				float: left;
+				height: 100%;
+				width: 33%;
+				padding: 0;
+				margin: 0;
+				position: relative;
+				display: block;
+			}
+			.secondary {
+				margin-top: 30px;
+			}
+
+
+
 		</style>
 
 	</head>
 	<body>
+
+		<div id="title">
+			<div class="column">
+				<h1>
+					LETTER SPACING
+				</h1>
+				<h2>
+					Click on the alphabet to explore letterforms
+				</h2>
+			</div>
+			<div class="column secondary" id="desc">
+				<h3>ABOUT</h3>
+				<p>
+					This is an opensource HTML5/WebGL experiment created at <a href="#">Art Hack SF</a><br/>
+					Created with love by <a href="http://jonobr1.com">jonobr1</a>, <a href="http://vimeo.com/laserstorm">Lars Berg</a>, <a href="http://estzi.com">Estzi</a>, <a href="http://aleksandarrodic.com">ARodic<a>, and <a href="http://nicklesh.com">nicklesh</a>
+				</p>
+			</div>
+			<div class="column secondary">
+				<h3>&nbsp;</h3>
+				<p>
+					<a href="http://nicklesh.dropmark.com/31397">Inspiration</a><br/>
+					<a href="http://github.com/jonobr1/Art-Hack-SF">View Source</a>
+				</p>
+			</div>
+			<br style="width:0; height:0; display:block; clear:both; line-height:0;"/>
+
+		</div>
+
+
 		<div id="letters">
 			<ul>
 				<li><a href="#">A</a></li>
