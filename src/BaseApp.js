@@ -21,14 +21,14 @@ BaseApp.prototype.init = function()
 	this.startTime = Date.now();
 	this.elapsedTime 	= 0;
    
-   this.scene = new THREE.Scene();
+  this.scene = new THREE.Scene();
    
-   this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
-   this.scene.add( this.camera );
+  this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+  this.scene.add( this.camera );
    
-   this.renderer = new THREE.WebGLRenderer( { antialias: true } );
-   this.renderer.setSize( window.innerWidth, window.innerHeight );
-	
+  this.renderer = new THREE.WebGLRenderer( { antialias: true } );
+  this.renderer.setSize( window.innerWidth, window.innerHeight );
+
    if (document.getElementById("container") != null){
       this.container = document.getElementById("container");
    } else {
