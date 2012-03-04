@@ -294,10 +294,8 @@
 
     Colors: [
    	  0xefefef,	
-	  0xffff99,
-      0x4C6D2F,
-      0xD30C04,
-      0x3EB6FF
+	  0xcccccc,
+	  0x333333
     ]
 
   })
