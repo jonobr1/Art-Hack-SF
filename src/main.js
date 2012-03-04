@@ -2,11 +2,12 @@
 
   //
 
+  var light;
   var stats;
   var bStats =  true;
   var camera;
-  var geo;
-  var sphere;
+  var letterMesh, _letterMesh, reference_mesh;
+  var cameraPosition = new THREE.Vector3(), cameraLookAt = new THREE.Vector3();
   var emitter;
   var count = 0;
   var worms = [];
@@ -94,9 +95,10 @@
       ].join('\n')
     });
 
-    sphere = new THREE.Mesh( new THREE.SphereGeometry(1, 100, 100), this.displacementMaterial);
-    sphere.doubleSided = true;
-    this.scene.add(sphere);
+    letterMesh = createLetterMesh('A', this.displacementMaterial);
+    this.scene.add(letterMesh);
+
+    reference_mesh = letterMesh;
 
     this.postMaterial = new THREE.ShaderMaterial({
 
@@ -186,21 +188,20 @@
 
       //camera
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight);
-      camera.position.set( 0, 10, 30 );
-      camera.lookAt( new THREE.Vector3(0, 0, 0) );
+      camera.position.set( 0, 0, 30 );
+      // camera.lookAt( new THREE.Vector3(0, 0, 0) );
       this.scene.add( camera );
 
       //lights
-      var pointLight = new THREE.PointLight( );
-      pointLight.position = camera.position;
-      this.scene.add( pointLight );
 
-      //load some geometry
-      // geo = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 1 ), new THREE.MeshNormalMaterial({ shading: THREE.FlatShading }) );
-      // geo.geometry.computeNormals();
-      // geo.geometry.computeVertexNormals();
-      // geo.geometry.computeFaceNormals();
-      // geo.geometry.computeCentroids();
+      light = new THREE.DirectionalLight();
+      light.intensity = 0.1;
+      light.position.copy(camera.position);
+      light.castShadow = true;
+      light.shadowDarkness = 0.3;
+      light.shadowCameraVisible = true;
+
+      this.scene.add( light );
 
       // this.scene.add( geo );
 
@@ -226,11 +227,18 @@
   this.postQuad.doubleSided = true;
   this.postScene.add( this.postQuad );
 
+  var material = new THREE.LineBasicMaterial({
+     opacity: 1.0,
+     linewidth: Math.floor(Math.random() * 7)
+    });
+
   for(var i=0; i<100; i++){
 
-    var worm = new Worm();
+    var worm = new Worm({
+      material: material
+    });
      worms.push( worm );
-     worm.reset( sphere );
+     worm.reset( reference_mesh );
 
      this.scene.add( worm.mesh );
 
@@ -263,12 +271,11 @@
           worms[i].vel.multiplyScalar( .91 );
           worms[i].vel.subSelf( delta );
 
-          worms[i].update(sphere);
+          worms[i].update( reference_mesh );
 
        });
 
-       camera.position.multiplyScalar(0.99).addSelf( target.clone().multiplyScalar(0.01) );
-       camera.lookAt( this.scene.position );
+       updateCamera.call(this);
 
        var n, nx, ny, nz;
        var nOffset = .1;
@@ -300,6 +307,16 @@
 
   });
 
+  function updateCamera() {
+
+    camera.position.x += (cameraPosition.x - camera.position.x) * 0.125;
+    camera.position.y += (cameraPosition.y - camera.position.y) * 0.125;
+    camera.position.z += (cameraPosition.z - camera.position.z) * 0.125;
+
+    camera.lookAt(cameraLookAt);
+
+  }
+
   var Worm = function( parameters ) {
 
      parameters = parameters || {};
@@ -330,11 +347,7 @@
      }
      this.geometry.dynamic = true;
 
-     this.material = parameters.material || new THREE.LineBasicMaterial({
-       opacity: 1.0,
-       linewidth: Math.floor(Math.random() * 5),
-       blending: THREE.MultiplyBlending
-      });
+     this.material = parameters.material;
      this.material.vertexColors = true;
 
      this.mesh = new THREE.Line(this.geometry, this.material);
@@ -419,14 +432,73 @@
 
 });
 
-var worms = [];
+  function createLetterMesh(letter, mat) {
+
+    var bevelEnabled = false;
+    var bevelThickness = 0;
+    var bevelSize = 0;
+    var font = 'helvetiker';
+    var height = 2;
+    var size = 8;
+    var curves = 4;
+    var weight = 'bold';
+    var style = 'normal';
+    var bend = false;
+
+    var geometry = new THREE.TextGeometry(letter, {
+
+      size: size,
+      curveSegments: curves,
+      height: height,
+      font: font,
+      weight: weight,
+      style: style,
+
+      bevelThickness: bevelThickness,
+      bevelSize: bevelSize,
+      bevelEnabled: bevelEnabled,
+
+      bend: bend,
+
+      material: 0,
+      extrudeMaterial: 1
+
+    });
+
+    geometry.computeBoundingBox();
+    geometry.computeVertexNormals();
+
+    var material = new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.SmoothShading } );
+    material.color = 0xffffff;
+    material.shading = THREE.SmoothShading;
+    var mesh = new THREE.Mesh(geometry, material);
+
+    var height = ( geometry.boundingBox.max.y - geometry.boundingBox.min.y ) 
+
+    cameraLookAt.copy( mesh.position );
+    cameraPosition.copy( mesh.position ).addSelf( new THREE.Vector3(0, 0, 10) );
+
+    mesh.position.x = - 0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
+    mesh.position.y = 0.5 * height;
+    mesh.position.z = 0;
+
+    mesh.rotation.x = Math.PI;
+    mesh.receiveShadow = true;
+    mesh.castShadow = true;
+
+    return mesh;
+
+  }
 
   function randomPointOnMesh( mesh, face ) {
+
+    mesh.updateMatrix();
 
     var randFace = face || mesh.geometry.faces[ BaseApp.randomInt( 0, mesh.geometry.faces.length-1) ];
     var pos = THREE.GeometryUtils.randomPointInFace( randFace, mesh.geometry, true ); 
 
-    return pos;
+    return mesh.matrix.multiplyVector3(pos);
+
   }
 
   function wrap(v, length) {
