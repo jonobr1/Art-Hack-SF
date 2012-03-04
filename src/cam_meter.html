@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="veiwport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<script type="text/javascript">
+		window.onload = init;
+
+		function init(){
+			camVid();
+		}
+
+		function getBrowserWidth()
+			{
+				if (window.innerWidth)
+				{
+					return window.innerWidth;
+				}
+				else if (document.documentElement && document.documentElement.clientWidth != 0)
+				{
+					return document.documentElement.clientWidth;
+				}
+				else if (document.body)
+				{
+					return document.body.clientWidth;
+				}
+
+				return 0;
+			};
+			
+			/*
+				check all possible get browswer height commands
+			*/
+			function getBrowserHeight()
+			{
+				if (window.innerHeight){
+					return window.innerHeight;
+				}
+				else if (document.documentElement && document.documentElement.clientHeight != 0){
+					return document.documentElement.clientHeight;
+				}
+				else if (document.body){
+					return document.body.clientHeight;
+				}
+
+				return 0;
+			};
+
+		function camVid(){
+
+			var canvas = document.getElementById("canvas");
+			var ctx = canvas.getContext("2d");
+			ctx.canvas.width = 640;
+			ctx.canvas.height = 480;
+
+
+			video = document.createElement("video");
+			video.width = 640;
+			video.height    = 480;
+			video.autoplay  = true;
+			video.style.top = "50px";
+			video.style.align = "center";
+			document.body.appendChild(video);
+
+			var hasUserMedia = navigator.webkitGetUserMedia ? true : false;
+           	console.log("UserMedia is detected", hasUserMedia);
+
+            if( hasUserMedia ){
+            	navigator.webkitGetUserMedia('video', function(stream){
+            		video.src = webkitURL.createObjectURL(stream);
+            	}, function(error){
+            		console.log("Failed to get a stream due to", error);
+            	});
+ 
+            }
+
+            draw(video, ctx, ctx.canvas.width, ctx.canvas.height);
+            
+            function draw(v, c, w, h){
+            	c.drawImage(v,0,0,w,h);
+            	var idata = c.getImageData(0, 0, w, h);
+            	var data = idata.data;
+            	var totalBrightness = 0;
+            	var count = 0;
+
+            	for(var i = 0; i < data.length; i+=4) {
+        			var r = data[i];
+        			var g = data[i+1];
+        			var b = data[i+2];
+        			var brightness = (3*r+4*g+b)>>>3;
+
+        			totalBrightness+=brightness;
+        			count++;
+
+        			data[i] = brightness;
+        			data[i+1] = brightness;
+        			data[i+2] = brightness;
+    			}
+    			//console.log(data.length, totalBrightness);
+    			var total = Math.floor(totalBrightness / count);
+    			idata.data = data;
+    			c.fillStyle = 'rgb(' + total + ',' + total + ',' + total + ')';
+    			c.fillRect(0, 0, w, h);
+               	setTimeout(draw, 20, v, c, w, h);
+            }
+			
+		}
+		</script>
+	</head>	
+	<body>
+		<canvas id="canvas">
+			canvas not supported.
+		</canvas>
+	</body>
+</html>

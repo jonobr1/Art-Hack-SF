@@ -3,22 +3,33 @@
     <title>Art Hack SF</title>
   </head>
 <body>
+
    <script type="text/javascript" src="./third-party/Stats.js"></script>
-    <script type="text/javascript" src="./third-party/Three/build/Three.js"></script>
+   <script type="text/javascript" src="./third-party/Three/build/Three.js"></script>
    <script type="text/javascript" src="./third-party/underscore.js"></script>
    <script type="text/javascript" src="./src/noise.js"></script>
    <script type="text/javascript" src="./src/THREE.VaporTrail.js"></script>
-     
-     <script type="text/javascript" src="./src/BaseApp.js"></script>
-     <script type="text/javascript" src="./src/LabShader.js"></script>
-     <script type="text/javascript" src="./src/LabParticleEmitter.js"></script>
-     <script type="text/javascript" src="./src/Main.js"></script>
 
-    <script type="text/javascript">
+   <script type="text/javascript" src="./src/BaseApp.js"></script>
+   <script type="text/javascript" src="./src/LabShader.js"></script>
+   <script type="text/javascript" src="./src/LabParticleEmitter.js"></script>
+   <script type="text/javascript" src="./src/Main.js"></script>
 
-      
+  <script type="text/javascript">
 
-    </script>
+    _.extend(document.body.style, {
+      margin: 0,
+      padding: 0,
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden',
+      background: '#777'
+    });
+
+    var APP = window.APP = new BaseApp({ debug: true });
+    APP.animate();
+
+  </script>
 
   </body>
 </html>

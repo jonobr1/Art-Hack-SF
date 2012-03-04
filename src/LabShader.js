@@ -1,5 +1,5 @@
 
-LabShader = function ( parameters ) {
+var LabShader = function ( parameters ) {
 //   THREE.ShaderMaterial.call( this );
    
    parameters = parameters || {};

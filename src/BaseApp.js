@@ -1,103 +1,174 @@
-// include required files
-/** @namespace LAB*/
-var LAB = LAB || {};
+(function() {
 
-// reference to global context, in most cases 'window'.
-LAB.global = this;
+  window.raf = (function(){
+    return  window.requestAnimationFrame       || 
+            window.webkitRequestAnimationFrame || 
+            window.mozRequestAnimationFrame    || 
+            window.oRequestAnimationFrame      || 
+            window.msRequestAnimationFrame     || 
+            function( callback ){
+              window.setTimeout(callback, 1000 / 60);
+            };
+  })();
 
-var gl;
-var labself;
+  var gl, elapsedTime = 0;
 
-var BaseApp = function(){
-//   if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-   labself = this;
+  var BaseApp = window.BaseApp = function(params) {
+
+    var params = _.defaults(params || {}, {
+      debug: false
+    });
+
+    var _this = this;
+
+    this.startTime = Date.now();
+
+    this.scene = new THREE.Scene();
+
+    this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+    this.scene.add( this.camera );
+
+    this.renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x777777, clearAlpha: 1.0 } );
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
+    this.gl = this.renderer._gl;
+
+    document.body.appendChild(this.renderer.domElement);
+
+    this.setup(params.debug);
+
+    var width = params.width || 640, height = params.height || 480;
+
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.ctx = this.canvas.getContext('2d');
+
+    this.video = document.createElement('video');
+    this.video.width = width;
+    this.video.height = height;
+    this.video.autoplay = true;
+
+    var hasUserMedia = navigator.webkitGetUserMedia ? true : false;
+    console.log('UserMedia is detected', hasUserMedia);
+
+    if (hasUserMedia) {
+
+      navigator.webkitGetUserMedia('video', function(stream){
+        _this.video.src = webkitURL.createObjectURL(stream);
+      }, function(error){
+        console.log('Failed to get a stream due to', error);
+      });
+
+    }
+
+    return this;
+
+    // this.animate();
+
+  };
+
+  _.extend(BaseApp.prototype, {
+
+    setup: function() {
+
+       console.log( 'BaseApp: setup ...override to extend' );
+
+    },
+
+    update: function() {
+
       
-//   this.init();
-//   this.animate();
-}
 
-BaseApp.prototype.init = function()
-{
-	this.startTime = Date.now();
-	this.elapsedTime 	= 0;
-   
-  this.scene = new THREE.Scene();
-   
-  this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
-  this.scene.add( this.camera );
-   
-  this.renderer = new THREE.WebGLRenderer( { antialias: true } );
-  this.renderer.setSize( window.innerWidth, window.innerHeight );
+    },
 
-   if (document.getElementById("container") != null){
-      this.container = document.getElementById("container");
-   } else {
-      console.log("no container in document, generating container div")
-      this.container = document.createElement( 'div' );
-      if (document.body)
-         document.body.appendChild( this.container );
-      else
-         return;
-   }
-   
-   this.container.appendChild(this.renderer.domElement);
-	gl = gl || this.renderer.getContext();
+    draw: function() {
 
-   this.setup();
-   console.log( 'init base app' );
-}
+      
 
 
-BaseApp.prototype.setup = function(){
-   console.log( "BaseApp: setup ...override to extend" );
-}
+    },
 
-BaseApp.prototype.update = function(){
-   //override to extending
-//   console.log( "BaseApp: updated ...override to extend" );
-}
+    animate: function() {
 
+      var _this = this;
 
-BaseApp.prototype.draw = function(){
-   //override to extending
-}
-
-BaseApp.prototype.animate = function(){
-   //   requestAnimationFrame( animate );
-   //   this.update();
-   //   this.draw();
-   
-	requestAnimationFrame( labself.animate, this );
-   this.elapsedTime = Date.now() - this.startTime;
-   
-	labself.update();
-	labself.draw();
-}
-
-BaseApp.prototype.getElapsedTimeMillis	= function()
-{
-   return this.elapsedTime;
-}
-
-BaseApp.prototype.getElapsedTimeSeconds = function(){
-   return this.elapsedTime/1000;
-}
+      raf(function() {
+        _this.animate();
+      });
 
 
+      /**
+       * Webcam stuff!
+       */
 
-randomRange = function( _min, _max){
-   return Math.random() * ( _max - _min ) + _min;
-}
-/**
- @function
- */
-randomInt	= function( _min, _max) {
-   return Math.floor( randomRange( _min, _max ));
-}
-/**
- @function
- */
-randomObject  	= function( _array ){
-   return _array[ Math.min(randomInt(0, _array.length ), _array.length-1)];
-}
+       var w = this.ctx.canvas.width, h = this.ctx.canvas.height;
 
+       this.ctx.drawImage(this.video, 0, 0, w, h);
+
+       var data = this.ctx.getImageData(0, 0, w, h).data;
+       var totalBrightness = 0;
+       var count = 0;
+
+       for(var i = 0; i < data.length; i+=4) {
+
+         var r = data[i];
+         var g = data[i+1];
+         var b = data[i+2];
+         var brightness = (3*r+4*g+b)>>>3;
+
+         totalBrightness+=brightness;
+         count++;
+
+         data[i] = brightness;
+         data[i+1] = brightness;
+         data[i+2] = brightness;
+
+       }
+
+       this.meter = Math.floor(totalBrightness / count);
+
+      /**
+       * WebGL Stuff!
+       */
+
+      elapsedTime = Date.now() - this.startTime;
+      this.update();
+      this.draw();
+
+    },
+
+    getElapsedTime: function() {
+
+      return elapsedTime;
+
+    },
+
+    getElapsedTimeSeconds: function() {
+
+      return elapsedTime;
+
+    }
+
+  });
+
+  _.extend(BaseApp, {
+
+    randomRange: function( _min, _max) {
+       return Math.random() * ( _max - _min ) + _min;
+    },
+    /**
+     @function
+     */
+    randomInt: function( _min, _max) {
+       return Math.floor( BaseApp.randomRange( _min, _max ));
+    },
+    /**
+     @function
+     */
+    randomObject: function( _array ) {
+       return _array[ Math.min(BaseApp.randomInt(0, _array.length ), _array.length-1)];
+    }
+
+  });
+
+})();
