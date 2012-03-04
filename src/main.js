@@ -2,11 +2,12 @@
 
   //
 
+  var light;
   var stats;
   var bStats =  true;
   var camera;
-  var geo;
-  var sphere;
+  var letterMesh, _letterMesh, reference_mesh;
+  var cameraPosition = new THREE.Vector3(), cameraLookAt = new THREE.Vector3();
   var emitter;
   var count = 0;
   var worms = [];
@@ -24,23 +25,24 @@
     },
 
     initPostprocessing: function() {
+
       var postUniforms = {
-    "time": { type: "f", value: 0 },
-    "samplerSphere": { type: "fv", value: [0.000000,0.000000,-1.000000,0.000000,0.525731,-0.850651,0.500000,0.162460,-0.850651,0.000000,0.894427,-0.447213,0.500000,0.688191,-0.525731,0.850651,0.276394,-0.447213,0.309017,-0.425325,-0.850651,0.809017,-0.262865,-0.525731,0.525731,-0.723607,-0.447213,-0.309017,-0.425325,-0.850651,0.000000,-0.850651,-0.525731,-0.525731,-0.723607,-0.447213,-0.500000,0.162460,-0.850651,-0.809017,-0.262865,-0.525731,-0.850651,0.276394,-0.447213,-0.500000,0.688191,-0.525731,-0.309017,0.951057,0.000000,-0.809017,0.587785,0.000000,-0.525731,0.723607,0.447213,-1.000000,0.000000,0.000000,-0.809017,-0.587785,0.000000,-0.850651,-0.276394,0.447213,-0.309017,-0.951057,0.000000,0.309017,-0.951057,0.000000,0.000000,-0.894427,0.447213,0.809017,-0.587785,0.000000,1.000000,0.000000,0.000000,0.850651,-0.276394,0.447213,0.809017,0.587785,0.000000,0.309017,0.951057,0.000000,0.525731,0.723607,0.447213,0.000000,0.850651,0.525731,-0.809017,0.262865,0.525731,-0.500000,-0.688191,0.525731,0.500000,-0.688191,0.525731,0.809017,0.262865,0.525731,0.000000,0.000000,1.000000,0.309017,0.425325,0.850651,-0.309017,0.425325,0.850651,0.500000,-0.162460,0.850651,0.000000,-0.525731,0.850651,-0.500000,-0.162460,0.850651]},
-    "samplerBokehHex": { type: "fv", value: [0.500000,0.000000,0.866025,0.166667,0.000000,0.866025,-0.166667,0.000000,0.866025,-0.500000,0.000000,0.866025,-0.666667,0.000000,0.577350,-0.833333,0.000000,0.288675,-1.000000,0.000000,0.000000,-0.833333,0.000000,-0.288675,-0.666667,0.000000,-0.577350,-0.500000,0.000000,-0.866025,-0.166667,0.000000,-0.866025,0.166667,0.000000,-0.866025,0.500000,0.000000,-0.866025,0.666667,0.000000,-0.577350,0.833333,0.000000,-0.288675,1.000000,0.000000,0.000000,0.833333,0.000000,0.288675,0.666667,0.000000,0.577350]},
-    "tColor": { type: "t", value: 0, texture: this.renderTarget.color },
+        "time": { type: "f", value: 0 },
+        "samplerSphere": { type: "fv", value: [0.000000,0.000000,-1.000000,0.000000,0.525731,-0.850651,0.500000,0.162460,-0.850651,0.000000,0.894427,-0.447213,0.500000,0.688191,-0.525731,0.850651,0.276394,-0.447213,0.309017,-0.425325,-0.850651,0.809017,-0.262865,-0.525731,0.525731,-0.723607,-0.447213,-0.309017,-0.425325,-0.850651,0.000000,-0.850651,-0.525731,-0.525731,-0.723607,-0.447213,-0.500000,0.162460,-0.850651,-0.809017,-0.262865,-0.525731,-0.850651,0.276394,-0.447213,-0.500000,0.688191,-0.525731,-0.309017,0.951057,0.000000,-0.809017,0.587785,0.000000,-0.525731,0.723607,0.447213,-1.000000,0.000000,0.000000,-0.809017,-0.587785,0.000000,-0.850651,-0.276394,0.447213,-0.309017,-0.951057,0.000000,0.309017,-0.951057,0.000000,0.000000,-0.894427,0.447213,0.809017,-0.587785,0.000000,1.000000,0.000000,0.000000,0.850651,-0.276394,0.447213,0.809017,0.587785,0.000000,0.309017,0.951057,0.000000,0.525731,0.723607,0.447213,0.000000,0.850651,0.525731,-0.809017,0.262865,0.525731,-0.500000,-0.688191,0.525731,0.500000,-0.688191,0.525731,0.809017,0.262865,0.525731,0.000000,0.000000,1.000000,0.309017,0.425325,0.850651,-0.309017,0.425325,0.850651,0.500000,-0.162460,0.850651,0.000000,-0.525731,0.850651,-0.500000,-0.162460,0.850651]},
+        "samplerBokehHex": { type: "fv", value: [0.500000,0.000000,0.866025,0.166667,0.000000,0.866025,-0.166667,0.000000,0.866025,-0.500000,0.000000,0.866025,-0.666667,0.000000,0.577350,-0.833333,0.000000,0.288675,-1.000000,0.000000,0.000000,-0.833333,0.000000,-0.288675,-0.666667,0.000000,-0.577350,-0.500000,0.000000,-0.866025,-0.166667,0.000000,-0.866025,0.166667,0.000000,-0.866025,0.500000,0.000000,-0.866025,0.666667,0.000000,-0.577350,0.833333,0.000000,-0.288675,1.000000,0.000000,0.000000,0.833333,0.000000,0.288675,0.666667,0.000000,0.577350]},
+        "tColor": { type: "t", value: 0, texture: this.renderTarget.color },
 
-    "focus":    { type: "f", value: 0.56 },
-		"aspect":   { type: "f", value: window.innerWidth/window.innerHeight },
-		"maxblur":  { type: "f", value: 0.0035 },
+        "focus":    { type: "f", value: 0.56 },
+        "aspect":   { type: "f", value: window.innerWidth/window.innerHeight },
+        "maxblur":  { type: "f", value: 0.0035 },
 
-    "screenWidth": { type: "f", value:window.innerWidth },
-		"screenHeight": { type: "f", value:window.innerHeight },
-		"vingenettingDarkening": { type: "f", value: 0.31 },
+        "screenWidth": { type: "f", value:window.innerWidth },
+        "screenHeight": { type: "f", value:window.innerHeight },
+        "vingenettingDarkening": { type: "f", value: 0.31 },
 
-		"colorA": { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) },
-		"colorB": { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) },
-		"colorC": { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) }
+        "colorA": { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) },
+        "colorB": { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) },
+        "colorC": { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) }
 
     };
 
@@ -50,7 +52,7 @@
 
     this.displacementMaterial = new THREE.ShaderMaterial({
       uniforms: {
-        'map': { type: 't', value: 0, texture: this.texture },
+        'map': { type: 't', value: _.uniqueId(), texture: this.texture },
         'offset_x': { type: 'f', value: 0 },
         'offset_y': { type: 'f', value: 0 }
       },
@@ -96,9 +98,10 @@
       ].join('\n')
     });
 
-    sphere = new THREE.Mesh( new THREE.SphereGeometry(1, 100, 100), this.displacementMaterial);
-    sphere.doubleSided = true;
-    this.scene.add(sphere);
+    letterMesh = createLetterMesh('A', this.displacementMaterial);
+    this.scene.add(letterMesh);
+
+    reference_mesh = letterMesh;
 
     this.postMaterial = new THREE.ShaderMaterial({
 
@@ -123,22 +126,22 @@
         "uniform sampler2D tNoise;",
         "uniform sampler2D tNormal;",
 
-        "uniform float maxblur;",  	// max blur amount
-        "uniform float aperture;",	// aperture - bigger values for shallower depth of field
+        "uniform float maxblur;",   // max blur amount
+        "uniform float aperture;",  // aperture - bigger values for shallower depth of field
         "uniform vec3 samplerBokehHex[18];",
         "uniform vec3 samplerSphere[42];",
         "uniform float focus;",
         "uniform float aspect;",
 
-				"uniform float screenWidth;",
-				"uniform float screenHeight;",
-				"uniform float vingenettingDarkening;",
+        "uniform float screenWidth;",
+        "uniform float screenHeight;",
+        "uniform float vingenettingDarkening;",
 
-				"varying vec2 vUv;",
+        "varying vec2 vUv;",
 
-				"void main() {",
+        "void main() {",
 
-					"vec4 col = texture2D( tColor, vUv.xy );",
+          "vec4 col = texture2D( tColor, vUv.xy );",
           "vec2 aspectcorrect = vec2( 1.0, aspect );",
           "vec3 rndUv = vec3(0.0);",
 
@@ -162,10 +165,10 @@
 
 
             "gl_FragColor = vec4( mix(gl_FragColor.rgb, - vec3( vingenettingDarkening ), vec3( dot( (vUv - vec2(0.5)), (vUv - vec2(0.5)) ))) , 1.0);",
-					  "gl_FragColor = vec4(1.0) - (vec4(1.0) - gl_FragColor) * (vec4(1.0) - gl_FragColor);",
+            "gl_FragColor = vec4(1.0) - (vec4(1.0) - gl_FragColor) * (vec4(1.0) - gl_FragColor);",
 
           //"gl_FragColor = vec4(col.aaa,1.);",
-				"}"
+        "}"
 
             ].join("\n")
 
@@ -258,21 +261,20 @@
 
       //camera
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight);
-      camera.position.set( 0, 10, 30 );
-      camera.lookAt( new THREE.Vector3(0, 0, 0) );
+      camera.position.set( 0, 0, 30 );
+      // camera.lookAt( new THREE.Vector3(0, 0, 0) );
       this.scene.add( camera );
 
       //lights
-      var pointLight = new THREE.PointLight( );
-      pointLight.position = camera.position;
-      this.scene.add( pointLight );
 
-      //load some geometry
-      // geo = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 1 ), new THREE.MeshNormalMaterial({ shading: THREE.FlatShading }) );
-      // geo.geometry.computeNormals();
-      // geo.geometry.computeVertexNormals();
-      // geo.geometry.computeFaceNormals();
-      // geo.geometry.computeCentroids();
+      light = new THREE.DirectionalLight();
+      light.intensity = 0.1;
+      light.position.copy(camera.position);
+      light.castShadow = true;
+      light.shadowDarkness = 0.3;
+      light.shadowCameraVisible = true;
+
+      this.scene.add( light );
 
       // this.scene.add( geo );
 
@@ -295,11 +297,18 @@
   this.postQuad.doubleSided = true;
   this.postScene.add( this.postQuad );
 
+  var material = new THREE.LineBasicMaterial({
+     opacity: 1.0,
+     linewidth: Math.floor(Math.random() * 7)
+    });
+
   for(var i=0; i<100; i++){
 
-    var worm = new Worm();
+    var worm = new Worm({
+      material: material
+    });
      worms.push( worm );
-     worm.reset( sphere );
+     worm.reset( reference_mesh );
 
      this.scene.add( worm.mesh );
 
@@ -332,12 +341,11 @@
           worms[i].vel.multiplyScalar( .91 );
           worms[i].vel.subSelf( delta );
 
-          worms[i].update(sphere);
+          worms[i].update( reference_mesh );
 
        });
 
-       camera.position.multiplyScalar(0.99).addSelf( target.clone().multiplyScalar(0.01) );
-       camera.lookAt( this.scene.position );
+       updateCamera.call(this);
 
        var n, nx, ny, nz;
        var nOffset = .1;
@@ -358,6 +366,16 @@
     }
 
   });
+
+  function updateCamera() {
+
+    camera.position.x += (cameraPosition.x - camera.position.x) * 0.125;
+    camera.position.y += (cameraPosition.y - camera.position.y) * 0.125;
+    camera.position.z += (cameraPosition.z - camera.position.z) * 0.125;
+
+    camera.lookAt(cameraLookAt);
+
+  }
 
   var Worm = function( parameters ) {
 
@@ -389,11 +407,7 @@
      }
      this.geometry.dynamic = true;
 
-     this.material = parameters.material || new THREE.LineBasicMaterial({
-       opacity: 1.0,
-       linewidth: Math.floor(Math.random() * 5),
-       blending: THREE.MultiplyBlending
-      });
+     this.material = parameters.material;
      this.material.vertexColors = true;
 
      this.mesh = new THREE.Line(this.geometry, this.material);
@@ -478,14 +492,73 @@
 
 });
 
-var worms = [];
+  function createLetterMesh(letter, mat) {
+
+    var bevelEnabled = false;
+    var bevelThickness = 0;
+    var bevelSize = 0;
+    var font = 'helvetiker';
+    var height = 2;
+    var size = 8;
+    var curves = 4;
+    var weight = 'bold';
+    var style = 'normal';
+    var bend = false;
+
+    var geometry = new THREE.TextGeometry(letter, {
+
+      size: size,
+      curveSegments: curves,
+      height: height,
+      font: font,
+      weight: weight,
+      style: style,
+
+      bevelThickness: bevelThickness,
+      bevelSize: bevelSize,
+      bevelEnabled: bevelEnabled,
+
+      bend: bend,
+
+      material: 0,
+      extrudeMaterial: 1
+
+    });
+
+    geometry.computeBoundingBox();
+    geometry.computeVertexNormals();
+
+    var material = new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.SmoothShading } );
+    material.color = 0xffffff;
+    material.shading = THREE.SmoothShading;
+    var mesh = new THREE.Mesh(geometry, material);
+
+    var height = ( geometry.boundingBox.max.y - geometry.boundingBox.min.y ) 
+
+    cameraLookAt.copy( mesh.position );
+    cameraPosition.copy( mesh.position ).addSelf( new THREE.Vector3(0, 0, 10) );
+
+    mesh.position.x = - 0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
+    mesh.position.y = 0.5 * height;
+    mesh.position.z = 0;
+
+    mesh.rotation.x = Math.PI;
+    mesh.receiveShadow = true;
+    mesh.castShadow = true;
+
+    return mesh;
+
+  }
 
   function randomPointOnMesh( mesh, face ) {
+
+    mesh.updateMatrix();
 
     var randFace = face || mesh.geometry.faces[ BaseApp.randomInt( 0, mesh.geometry.faces.length-1) ];
     var pos = THREE.GeometryUtils.randomPointInFace( randFace, mesh.geometry, true ); 
 
-    return pos;
+    return mesh.matrix.multiplyVector3(pos);
+
   }
 
   function wrap(v, length) {

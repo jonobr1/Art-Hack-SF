@@ -31,6 +31,8 @@
     this.renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0xdddddd, clearAlpha: 1.0 } );
     this.renderer.setSize( window.innerWidth, window.innerHeight );
     this.gl = this.renderer._gl;
+    this.renderer.shadowMapEnabled = true;
+    // this.renderer.shadowMapSoft = true;
 
     document.body.appendChild(this.renderer.domElement);
 
