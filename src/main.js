@@ -13,7 +13,9 @@
   var worms = [];
 
 	//camera process
-	var ping, pong, webcamRT, webcamScene, webcamPlane, webcamCam, webcamRenderer;
+	var ping, pong, webcamRT, webcamScene, webcamPlane, webcamCam;
+	
+	//
 
   _.extend(BaseApp.prototype, {
 
@@ -187,7 +189,7 @@
         uniforms: {
 	        'webcam': { type: 't', value: 0, texture: this.texture },
 	        'lastwebcam': { type: 't', value: 1, texture: webcamRT },
-			'smoothness': { type: 'f', value: .7 },
+			'smoothness': { type: 'f', value: .3	 },
 		},
 		
         vertexShader: [
@@ -289,7 +291,7 @@
 
   var material = new THREE.LineBasicMaterial({
      opacity: 1.0,
-     linewidth: Math.floor(Math.random() * 7)
+     linewidth: 7//Math.floor(Math.random() * 7)
     });
 
   for(var i=0; i<100; i++){
