@@ -1,103 +1,110 @@
-// include required files
-/** @namespace LAB*/
-var LAB = LAB || {};
+(function() {
 
-// reference to global context, in most cases 'window'.
-LAB.global = this;
+  window.raf = (function(){
+    return  window.requestAnimationFrame       || 
+            window.webkitRequestAnimationFrame || 
+            window.mozRequestAnimationFrame    || 
+            window.oRequestAnimationFrame      || 
+            window.msRequestAnimationFrame     || 
+            function( callback ){
+              window.setTimeout(callback, 1000 / 60);
+            };
+  })();
 
-var gl;
-var labself;
+  var gl, elapsedTime = 0;
 
-var BaseApp = function(){
-//   if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-   labself = this;
+  var BaseApp = window.BaseApp = function(params) {
+
+    var params = _.defaults(params || {}, {
+      debug: false
+    });
+
+    this.startTime = Date.now();
+
+    this.scene = new THREE.Scene();
+
+    this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+    this.scene.add( this.camera );
+
+    this.renderer = new THREE.WebGLRenderer( { antialias: true } );
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
+    this.gl = this.renderer._gl;
+
+    document.body.appendChild(this.renderer.domElement);
+
+    this.setup(params.debug);
+
+    return this;
+
+    // this.animate();
+
+  };
+
+  _.extend(BaseApp.prototype, {
+
+    setup: function() {
+
+       console.log( "BaseApp: setup ...override to extend" );
+
+    },
+
+    update: function() {
+
       
-//   this.init();
-//   this.animate();
-}
 
-BaseApp.prototype.init = function()
-{
-	this.startTime = Date.now();
-	this.elapsedTime 	= 0;
-   
-   this.scene = new THREE.Scene();
-   
-   this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
-   this.scene.add( this.camera );
-   
-   this.renderer = new THREE.WebGLRenderer( { antialias: true } );
-   this.renderer.setSize( window.innerWidth, window.innerHeight );
-	
-   if (document.getElementById("container") != null){
-      this.container = document.getElementById("container");
-   } else {
-      console.log("no container in document, generating container div")
-      this.container = document.createElement( 'div' );
-      if (document.body)
-         document.body.appendChild( this.container );
-      else
-         return;
-   }
-   
-   this.container.appendChild(this.renderer.domElement);
-	gl = gl || this.renderer.getContext();
+    },
 
-   this.setup();
-   console.log( 'init base app' );
-}
+    draw: function() {
 
+      
 
-BaseApp.prototype.setup = function(){
-   console.log( "BaseApp: setup ...override to extend" );
-}
+    },
 
-BaseApp.prototype.update = function(){
-   //override to extending
-//   console.log( "BaseApp: updated ...override to extend" );
-}
+    animate: function() {
 
+      var _this = this;
 
-BaseApp.prototype.draw = function(){
-   //override to extending
-}
+      raf(function() {
+        _this.animate();
+      });
+      elapsedTime = Date.now() - this.startTime;
+      this.update();
+      this.draw();
 
-BaseApp.prototype.animate = function(){
-   //   requestAnimationFrame( animate );
-   //   this.update();
-   //   this.draw();
-   
-	requestAnimationFrame( labself.animate, this );
-   this.elapsedTime = Date.now() - this.startTime;
-   
-	labself.update();
-	labself.draw();
-}
+    },
 
-BaseApp.prototype.getElapsedTimeMillis	= function()
-{
-   return this.elapsedTime;
-}
+    getElapsedTime: function() {
 
-BaseApp.prototype.getElapsedTimeSeconds = function(){
-   return this.elapsedTime/1000;
-}
+      return elapsedTime;
 
+    },
 
+    getElapsedTimeSeconds: function() {
 
-randomRange = function( _min, _max){
-   return Math.random() * ( _max - _min ) + _min;
-}
-/**
- @function
- */
-randomInt	= function( _min, _max) {
-   return Math.floor( randomRange( _min, _max ));
-}
-/**
- @function
- */
-randomObject  	= function( _array ){
-   return _array[ Math.min(randomInt(0, _array.length ), _array.length-1)];
-}
+      return elapsedTime;
 
+    }
+
+  });
+
+  _.extend(BaseApp, {
+
+    randomRange: function( _min, _max) {
+       return Math.random() * ( _max - _min ) + _min;
+    },
+    /**
+     @function
+     */
+    randomInt: function( _min, _max) {
+       return Math.floor( BaseApp.randomRange( _min, _max ));
+    },
+    /**
+     @function
+     */
+    randomObject: function( _array ) {
+       return _array[ Math.min(BaseApp.randomInt(0, _array.length ), _array.length-1)];
+    }
+
+  });
+
+})();

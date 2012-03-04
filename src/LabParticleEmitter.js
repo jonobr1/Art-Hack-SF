@@ -1,9 +1,3 @@
-/** @namespace LAB.three */
-LAB.three = LAB.three || {};
-
-/** 
- 
- */
 
 var labParticle = function(){
    this.pos = new THREE.Vector3();
@@ -67,13 +61,12 @@ LabParticleEmitter = function ( parameters ) {
    this.shader = parameters.shader || this.makeDefaultShader();
    this.shader.attributes = this.attributes;
    this.shader.transparent = true;
-   console.log( this.shader );
    
    this.particleSystem = new THREE.ParticleSystem( this.geometry, this.shader );
    
    
    this.scene.add( this.particleSystem );
-   this.renderer.render( this.scene, labself.camera );//this is kinda sloppy, but it's any easy way to create the webgl buffers
+   this.renderer.render( this.scene, parameters.camera );//this is kinda sloppy, but it's any easy way to create the webgl buffers
    this.particleSystem.geometry.__webglParticleCount = 0;// set the particle count to 0
    
 };
