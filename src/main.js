@@ -8,15 +8,13 @@
   var geo;
   var emitter;
   var count = 0;
-  var vectorTrails = [];
-  var vectorMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1.0, linewidth: 2 });
   var worms = [];
 
   _.extend(BaseApp.prototype, {
 
     draw: function() {
 
-      console.log(this.meter);
+      // console.log(this.meter);
 
       this.renderer.render( this.scene, camera, this.renderTarget.color, true );
       this.renderer.render( this.postScene, this.postCamera, null, true );
@@ -131,7 +129,7 @@
       }
 
       //camera
-      camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight);
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight);
       camera.position.set( 0, 10, 30 );
       camera.lookAt( new THREE.Vector3(0, 0, 0) );
       this.scene.add( camera );
@@ -142,7 +140,7 @@
       this.scene.add( pointLight );
 
       //load some geometry
-      geo = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 1 ), new THREE.MeshNormalMaterial({shading: THREE.FlatShading}) );
+      geo = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 1 ), new THREE.MeshNormalMaterial({ shading: THREE.FlatShading }) );
       this.scene.add( geo );
 
       //particle emitter
@@ -151,10 +149,15 @@
                                        maxParticleCount: 10000,
                                        camera: camera });
 
-      for(var i=0; i<100; i++){
-         worms.push( new Worm() );
-         this.scene.add( worms[i].mesh );
-      }
+  for(var i=0; i<100; i++){
+
+    var worm = new Worm();
+     worms.push( worm );
+     worm.reset(geo);
+
+     this.scene.add( worm.mesh );
+
+  }
 
       // Post processing scene
   this.postScene = new THREE.Scene();
@@ -180,10 +183,6 @@
 
        if(bStats) stats.update();
 
-       _.each(vectorTrails, function(vectorTrail) {
-           vectorTrail.update();
-        });
-
        geo.rotation.x += .005;
        geo.rotation.y += .0005;
 
@@ -195,23 +194,20 @@
 
         _.each(worms, function(worm, i) {
 
-          if (i > 0) {
+          delta.copy( worms[i].geometry.vertices[0].position );
+          delta.subSelf( worms[wrap(i - 1, worms.length)].geometry.vertices[0].position );
+          delta.normalize();
+          delta.multiplyScalar( .04 );
 
-            delta.copy( worms[i].geometry.vertices[0].position );
-            delta.subSelf( worms[i-1].geometry.vertices[0].position );
-            delta.normalize();
-            delta.multiplyScalar( .04 );
+          worms[i].vel.multiplyScalar( .91 );
+          worms[i].vel.subSelf( delta );
 
-            worms[i].vel.multiplyScalar( .91 );
-            worms[i].vel.subSelf( delta );
+          worms[i].update(geo);
 
-            worms[i].update( i * .1 );
-          }
        });
 
-       worms[0].update();
-
-       this.camera.position.copy( target );
+       camera.position.multiplyScalar(0.99).addSelf( target.clone().multiplyScalar(0.01) );
+       camera.lookAt( this.scene.position );
 
        var n, nx, ny, nz;
        var nOffset = .1;
@@ -237,29 +233,6 @@
           }
        }
 
-    //   
-    //   //emit some particles from the geometry onceit's loaded
-    //      for(var i=0; i<1; i++){
-    //         var face = geo.geometry.faces[ randomInt( 0, geo.geometry.faces.length-1) ];//get random face
-    //         var pos = randomPointOnMesh( geo, face );
-    //         var vel = new THREE.Vector4(face.normal.x*3, face.normal.y*3, face.normal.z*3, 0 );
-    //         vel.multiplyScalar( .125 );//use it's normal as our new particle's velocity
-    //         geo.matrix.multiplyVector4( vel );//rotate the vel with the mesh's matrix
-    //
-    //         
-    //         // lifespan, size, length
-    //         var vectorTrail = new THREE.VectorTrail(pos, .5, 60, 0, randomInt(10,30), vectorMaterial).finished(removeVectorTrail);
-    //         geo.add(vectorTrail.mesh);
-    //         vectorTrail.id = vectorTrails.length;
-    //         vectorTrails.push(vectorTrail);
-    //         //         emitter.addParticle(pos,
-    ////                             vel,
-    ////                             {x: BaseApp.randomRange( .1, 1), y: BaseApp.randomRange( .1, 1), z: BaseApp.randomRange( .1, 1)},//color
-    ////                             BaseApp.randomRange( .1, 2),//size
-    ////                             APP.getElapsedTime(),//time
-    ////                             BaseApp.randomRange( 4, 8 ));//lifespan
-    //      }
-
     }
 
   });
@@ -268,31 +241,36 @@
 
      parameters = parameters || {};
 
-     this.vel = parameters.vel || new THREE.Vector3( BaseApp.randomRange(-.1, .1), BaseApp.randomRange(-.1, .1), BaseApp.randomRange(-.1, .1) );
+     this.lifespan = 100 + Math.floor(Math.random() * 250);
+     this.age = 0;
+     this.dead = false;
+
+     this.vel = parameters.vel || new THREE.Vector3( BaseApp.randomRange(-1, 1), BaseApp.randomRange(-1, 1), BaseApp.randomRange(-1, 1) );
      this.speed = 5;
 
      var color = Worm.Colors[Math.floor(Math.random() * Worm.Colors.length)];
 
      this.geometry = parameters.geometry || new THREE.Geometry();
-     var length = parameters.length || 50;
+     var length = this.length = parameters.length || 50;
 
       for(var i=0; i < length; i++){
 
         var c = new THREE.Color(color);
-        var mod = Math.sqrt(1 - i / length);
+        var mod = Math.sqrt(1 - Math.sin(i / length * Math.PI));
 
-        c.r *= mod;
-        c.g *= mod;
-        c.b *= mod;
+        c.r *= map(mod, 0, 1, c.r, Math.min(c.r * 1.5, 255));
+        c.g *= map(mod, 0, 1, c.g, Math.min(c.g * 1.5, 255));
+        c.b *= map(mod, 0, 1, c.b, Math.min(c.b * 1.5, 255));
 
         this.geometry.vertices.push(new THREE.Vertex(new THREE.Vector3()));
         this.geometry.colors.push(c);
-      }
+     }
      this.geometry.dynamic = true;
 
      this.material = parameters.material || new THREE.LineBasicMaterial({
        opacity: 1.0,
-       linewidth: Math.floor(Math.random() * 5)
+       linewidth: Math.floor(Math.random() * 5),
+       blending: THREE.MultiplyBlending
       });
      this.material.vertexColors = true;
 
@@ -305,35 +283,68 @@
     Colors: [
       0xb04a8f,
       0x5e289f,
-      0x903d96
+      0x903d96,
+      0xff0000,
+      0x00AEEF,
+      0x00EDA9
     ]
 
   })
 
   _.extend(Worm.prototype, {
 
-    update: function(offset) {
+    update: function(mesh) {
 
-      // this.vel.multiplyScalar( APP.meter );
-
-      offset = offset || 0;
-      for(var i=this.geometry.vertices.length-1; i>=1; i--) {
-         this.geometry.vertices[i].position.multiplyScalar(.6);
-         this.geometry.vertices[i].position.x += this.geometry.vertices[i-1].position.x * 0.4;
-         this.geometry.vertices[i].position.y += this.geometry.vertices[i-1].position.y * 0.4;
-         this.geometry.vertices[i].position.z += this.geometry.vertices[i-1].position.z * 0.4;
+      if (this.dead) {
+        return;
       }
 
-      var n, nx, ny, nz;
-      var nOffset = .1;
-      var nScl = .25;
-      var attenuation = .75;
-      var p = this.geometry.vertices[0].position;
+      var brightness = Math.min(APP.meter * 100, 1.0);
 
-      // this.vel.multiplyScalar(APP.meter);//.addSelf({ x: nx, y: ny, z: nx })
+      for(var i=this.geometry.vertices.length-1; i>=1; i--) {
+         // this.geometry.vertices[i].position.multiplyScalar(.3);
+         // this.geometry.vertices[i].position.x += this.geometry.vertices[i-1].position.x * 0.7;
+         // this.geometry.vertices[i].position.y += this.geometry.vertices[i-1].position.y * 0.7;
+         // this.geometry.vertices[i].position.z += this.geometry.vertices[i-1].position.z * 0.7;
+         this.geometry.vertices[i].position.copy(this.geometry.vertices[i - 1].position);
+      }
 
-      this.geometry.vertices[0].position.addSelf( this.vel );
+      this.age++;
+
+      if (this.age < this.lifespan) {
+
+        this.geometry.vertices[0].position.addSelf( this.vel.multiplyScalar(brightness) );
+
+      } else {
+
+        var last = this.geometry.vertices[this.geometry.vertices.length - 1].position;
+        var first = this.geometry.vertices[0].position;
+
+        if (last.x === first.x && last.y === first.y && last.z === first.z) {
+          this.dead = true;
+          this.reset(mesh);
+        }
+
+      }
+
       this.geometry.__dirtyVertices = true;
+
+   },
+
+   reset: function(mesh, amt) {
+
+     var face = mesh.geometry.faces[BaseApp.randomInt( 0, mesh.geometry.faces.length-1)];
+     var pos = randomPointOnMesh(mesh, face);
+     var normal = face.normal;
+
+     this.vel.copy(normal);
+
+     _.each(this.geometry.vertices, function(vert) {
+       vert.position.copy(pos);
+     });
+
+     this.age = 0;
+     this.dead = false;
 
    }
 
@@ -341,16 +352,26 @@
 
 var worms = [];
 
-  function randomPointOnMesh( mesh, face ){
-  //   if(this.isLoaded){
-        var randFace = face || mesh.geometry.faces[ BaseApp.randomInt( 0, mesh.geometry.faces.length-1) ];
-        var pos = THREE.GeometryUtils.randomPointInFace( randFace, mesh.geometry, true ); 
-  //      mesh.matrixWorld.multiplyVector3( pos );
+  function randomPointOnMesh( mesh, face ) {
 
-        return pos;
-  //   }
-  //   else return new THREE.Vector3(); 
+    var randFace = face || mesh.geometry.faces[ BaseApp.randomInt( 0, mesh.geometry.faces.length-1) ];
+    var pos = THREE.GeometryUtils.randomPointInFace( randFace, mesh.geometry, true ); 
+
+    return pos;
   }
 
+  function wrap(v, length) {
+
+    while (v < 0) {
+      v += length;
+    }
+
+    return v % length;
+
+  }
+
+  function map(v, i1, i2, o1, o2) {
+    return o1 + (o2 - o1) * ((v - i1) / (i2 - i1));
+  }
 
 })();
