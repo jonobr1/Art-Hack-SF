@@ -15,8 +15,10 @@
   var count = 0;
   var worms = [];
 
-	//camera process
-	var ping, pong, webcamRT, webcamScene, webcamPlane, webcamCam, webcamRenderer;
+  //camera process
+  var ping, pong, webcamRT, webcamScene, webcamPlane, webcamCam;
+  
+  //
 
   _.extend(BaseApp.prototype, {
 
@@ -185,21 +187,21 @@
       });
 
 
-	//camera process
-	ping = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
-	pong = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
-	webcamRT = ping;
-	
-	
-	
+  //camera process
+  ping = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
+  pong = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
+  webcamRT = ping;
+  
+  
+  
     this.webcamProcess = new THREE.ShaderMaterial({
 
         uniforms: {
-	        'webcam': { type: 't', value: 0, texture: this.texture },
-	        'lastwebcam': { type: 't', value: 1, texture: webcamRT },
-			'smoothness': { type: 'f', value: .7 },
-		},
-		
+          'webcam': { type: 't', value: 0, texture: this.texture },
+          'lastwebcam': { type: 't', value: 1, texture: webcamRT },
+      'smoothness': { type: 'f', value: .3   },
+    },
+    
         vertexShader: [
 
             "varying vec2 vUv;",
@@ -224,36 +226,35 @@
 
         "varying vec2 vUv;",
 
-		"void main() {",
-			// "vec4 col = texture2D( tColor, vUv.xy );",
-			"gl_FragColor = vec4(texture2D( webcam, vUv.xy ).xyz*(1.-smoothness) + texture2D( lastwebcam, vUv.xy ).xyz*smoothness, 1.) ;",
-		"}"
+    "void main() {",
+      // "vec4 col = texture2D( tColor, vUv.xy );",
+      "gl_FragColor = vec4(texture2D( webcam, vUv.xy ).xyz*(1.-smoothness) + texture2D( lastwebcam, vUv.xy ).xyz*smoothness, 1.) ;",
+    "}"
 
             ].join("\n")
 
       });
-	
-	webcamCam = new THREE.OrthographicCamera ( -0.5, 0.5 , -0.5, 0.5, 0.001, 1000 );
-	webcamScene = new THREE.Scene();
-	webcamPlane = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), this.webcamProcess );
-	webcamPlane.doubleSided = true;
-	
-	webcamPlane.material.uniforms.lastwebcam.texture = pong;
-	
-	webcamScene = new THREE.Scene();
-	webcamScene.add( webcamCam );
-	webcamScene.add( webcamPlane );
-	this.renderer.render( webcamScene, webcamCam, pong, true );
-	
-		
+  
+  webcamCam = new THREE.OrthographicCamera ( -0.5, 0.5 , -0.5, 0.5, 0.001, 1000 );
+  webcamScene = new THREE.Scene();
+  webcamPlane = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), this.webcamProcess );
+  webcamPlane.doubleSided = true;
+  
+  webcamPlane.material.uniforms.lastwebcam.texture = pong;
+  
+  webcamScene = new THREE.Scene();
+  webcamScene.add( webcamCam );
+  webcamScene.add( webcamPlane );
+  this.renderer.render( webcamScene, webcamCam, pong, true );
+
     },
 
-	pingpong: function() {
-		webcamRT = ping;
-		ping = pong;
-		pong = webcamRT;
-	},
-	
+  pingpong: function() {
+    webcamRT = ping;
+    ping = pong;
+    pong = webcamRT;
+  },
+  
     setup: function(debug) {
 
       if (debug) {
@@ -357,14 +358,14 @@
 
        updateCamera.call(this);
 
-  		webcamPlane.material.uniforms.lastwebcam.texture = ping;
+      webcamPlane.material.uniforms.lastwebcam.texture = ping;
 
-  		this.renderer.render( webcamScene, webcamCam, pong, true );
-		
-  		letterMesh.children[0].material.uniforms.map.texture = pong;
-		
-  		this.pingpong();
-		
+      this.renderer.render( webcamScene, webcamCam, pong, true );
+    
+      letterMesh.children[0].material.uniforms.map.texture = pong;
+    
+      this.pingpong();
+
       this.texture.needsUpdate = true;
 
     }
