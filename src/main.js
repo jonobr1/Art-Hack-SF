@@ -1,5 +1,6 @@
-(function() {
 
+
+(function() {
   //
 
   var light;
@@ -7,15 +8,17 @@
   var bStats =  true;
   var camera;
   var letterMesh, _letterMesh, reference_mesh;
-  var cameraPosition = new THREE.Vector3(), cameraLookAt = new THREE.Vector3();
+  var prevMesh;
+  var cameraPosition = new THREE.Vector3(), cameraLookAt = new THREE.Vector3(), _cameraLookAt = new THREE.Vector3();
+  var container = new THREE.Object3D();
   var emitter;
   var count = 0;
   var worms = [];
 
-	//camera process
-	var ping, pong, webcamRT, webcamScene, webcamPlane, webcamCam;
-	
-	//
+  //camera process
+  var ping, pong, webcamRT, webcamScene, webcamPlane, webcamCam;
+  
+  //
 
   _.extend(BaseApp.prototype, {
 
@@ -100,8 +103,15 @@
       ].join('\n')
     });
 
-    letterMesh = createLetterMesh('C', this.displacementMaterial);
-    this.scene.add(letterMesh);
+    this.scene.add(container);
+
+    letterMesh = createLetterMesh('A', this.displacementMaterial);
+
+    cameraLookAt.copy( letterMesh.position );
+    _cameraLookAt.copy( cameraLookAt );
+    cameraPosition.copy( letterMesh.position ).addSelf( new THREE.Vector3(0, 0, 10) );
+
+    container.add(letterMesh);
 
     reference_mesh = letterMesh;
 
@@ -177,21 +187,21 @@
       });
 
 
-	//camera process
-	ping = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
-	pong = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
-	webcamRT = ping;
-	
-	
-	
+  //camera process
+  ping = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
+  pong = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
+  webcamRT = ping;
+  
+  
+  
     this.webcamProcess = new THREE.ShaderMaterial({
 
         uniforms: {
-	        'webcam': { type: 't', value: 0, texture: this.texture },
-	        'lastwebcam': { type: 't', value: 1, texture: webcamRT },
-			'smoothness': { type: 'f', value: .3	 },
-		},
-		
+          'webcam': { type: 't', value: 0, texture: this.texture },
+          'lastwebcam': { type: 't', value: 1, texture: webcamRT },
+      'smoothness': { type: 'f', value: .3   },
+    },
+    
         vertexShader: [
 
             "varying vec2 vUv;",
@@ -216,37 +226,36 @@
 
         "varying vec2 vUv;",
 
-		"void main() {",
-			// "vec4 col = texture2D( tColor, vUv.xy );",
-			"gl_FragColor = vec4(texture2D( webcam, vUv.xy ).xyz*(1.-smoothness) + texture2D( lastwebcam, vUv.xy ).xyz*smoothness, 1.) ;",
-		"}"
+    "void main() {",
+      // "vec4 col = texture2D( tColor, vUv.xy );",
+      "gl_FragColor = vec4(texture2D( webcam, vUv.xy ).xyz*(1.-smoothness) + texture2D( lastwebcam, vUv.xy ).xyz*smoothness, 1.) ;",
+    "}"
 
             ].join("\n")
 
       });
-	
-	webcamCam = new THREE.OrthographicCamera ( -0.5, 0.5 , -0.5, 0.5, 0.001, 1000 );
-	webcamScene = new THREE.Scene();
-	webcamPlane = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), this.webcamProcess );
-	webcamPlane.doubleSided = true;
-	
-	webcamPlane.material.uniforms.lastwebcam.texture = pong;
-	
-	webcamScene = new THREE.Scene();
-	webcamScene.add( webcamCam );
-	webcamScene.add( webcamPlane );
-	this.renderer.render( webcamScene, webcamCam, pong, true );
-	
-		
-		console.log( webcamPlane );
+  
+  webcamCam = new THREE.OrthographicCamera ( -0.5, 0.5 , -0.5, 0.5, 0.001, 1000 );
+  webcamScene = new THREE.Scene();
+  webcamPlane = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), this.webcamProcess );
+  webcamPlane.doubleSided = true;
+  
+  webcamPlane.material.uniforms.lastwebcam.texture = pong;
+  
+  webcamScene = new THREE.Scene();
+  webcamScene.add( webcamCam );
+  webcamScene.add( webcamPlane );
+  this.renderer.render( webcamScene, webcamCam, pong, true );
+  
+    
     },
 
-	pingpong: function() {
-		webcamRT = ping;
-		ping = pong;
-		pong = webcamRT;
-	},
-	
+  pingpong: function() {
+    webcamRT = ping;
+    ping = pong;
+    pong = webcamRT;
+  },
+  
     setup: function(debug) {
 
       if (debug) {
@@ -291,7 +300,7 @@
 
   var material = new THREE.LineBasicMaterial({
      opacity: 1.0,
-     linewidth: 7//Math.floor(Math.random() * 7)
+     linewidth: 1
     });
 
   for(var i=0; i<100; i++){
@@ -300,7 +309,7 @@
       material: material
     });
      worms.push( worm );
-     worm.reset( reference_mesh );
+     worm.reset( reference_mesh.children[0] );
 
      this.scene.add( worm.mesh );
 
@@ -313,7 +322,7 @@
   light.intensity = 0.1;
   light.castShadow = true;
   light.shadowDarkness = 0.3;
-  light.shadowCameraVisible = true;
+  light.shadowCameraVisible = false;
 
   this.scene.add( light );
 
@@ -350,14 +359,14 @@
 
        updateCamera.call(this);
 
-  		webcamPlane.material.uniforms.lastwebcam.texture = ping;
+      webcamPlane.material.uniforms.lastwebcam.texture = ping;
 
-  		this.renderer.render( webcamScene, webcamCam, pong, true );
-		
-  		letterMesh.material.uniforms.map.texture = pong;
-		
-  		this.pingpong();
-		
+      this.renderer.render( webcamScene, webcamCam, pong, true );
+    
+      letterMesh.children[0].material.uniforms.map.texture = pong;
+    
+      this.pingpong();
+    
       this.texture.needsUpdate = true;
 
     }
@@ -366,11 +375,15 @@
 
   function updateCamera() {
 
-    camera.position.x += (cameraPosition.x - camera.position.x) * 0.125;
-    camera.position.y += (cameraPosition.y - camera.position.y) * 0.125;
-    camera.position.z += (cameraPosition.z - camera.position.z) * 0.125;
+    camera.position.x += (cameraPosition.x - camera.position.x) * 0.0625;
+    camera.position.y += (cameraPosition.y - camera.position.y) * 0.0625;
+    camera.position.z += (cameraPosition.z - camera.position.z) * 0.0625;
 
-    camera.lookAt(cameraLookAt);
+    _cameraLookAt.x += (cameraLookAt.x - _cameraLookAt.x) * 0.0625;
+    _cameraLookAt.y += (cameraLookAt.y - _cameraLookAt.y) * 0.0625;
+    _cameraLookAt.z += (cameraLookAt.z - _cameraLookAt.z) * 0.0625;
+
+    camera.lookAt(_cameraLookAt);
 
   }
 
@@ -461,7 +474,7 @@
 
         if (last.x === first.x && last.y === first.y && last.z === first.z) {
           this.dead = true;
-          this.reset(mesh);
+          this.reset(mesh.children[0]);
         }
 
       }
@@ -534,18 +547,50 @@
 
     var height = ( geometry.boundingBox.max.y - geometry.boundingBox.min.y ) 
 
-    cameraLookAt.copy( mesh.position );
-    cameraPosition.copy( mesh.position ).addSelf( new THREE.Vector3(0, 0, 10) );
-
     mesh.position.x = - 0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
     mesh.position.y = 0.5 * height;
     mesh.position.z = 0;
-
+    
     mesh.rotation.x = Math.PI;
+
     mesh.receiveShadow = true;
     mesh.castShadow = true;
 
-    return mesh;
+    var obj = new THREE.Object3D();
+    obj.add(mesh);
+
+    return obj;
+
+  }
+
+  function goToNewLetter(letter) {
+
+    if (prevMesh) {
+      container.remove(prevMesh);
+    }
+
+    _letterMesh = createLetterMesh.call(APP, letter, APP.displacementMaterial);
+
+    var amt = -100;
+    var off = 0;
+    var randomPointInSpace = new THREE.Vector3(0, 0, Math.random() * amt - off).addSelf(letterMesh.position);
+
+    _letterMesh.position.copy(randomPointInSpace);
+    cameraLookAt.copy(randomPointInSpace);
+    cameraPosition.copy(randomPointInSpace).addSelf(new THREE.Vector3(0, 0, 10));
+
+    container.add(_letterMesh);
+
+    prevMesh = letterMesh;
+    letterMesh = reference_mesh = _letterMesh;
+
+    console.log(worms);
+
+    _.defer(function() {
+      _.each(worms, function(worm) {
+        worm.reset(reference_mesh.children[0]);
+      });
+    });
 
   }
 
@@ -556,7 +601,7 @@
     var randFace = face || mesh.geometry.faces[ BaseApp.randomInt( 0, mesh.geometry.faces.length-1) ];
     var pos = THREE.GeometryUtils.randomPointInFace( randFace, mesh.geometry, true ); 
 
-    return mesh.matrix.multiplyVector3(pos);
+    return mesh.parent.matrix.multiplyVector3(mesh.matrix.multiplyVector3(pos));
 
   }
 
@@ -573,5 +618,21 @@
   function map(v, i1, i2, o1, o2) {
     return o1 + (o2 - o1) * ((v - i1) / (i2 - i1));
   }
+
+  var elems = document.querySelectorAll('li a');
+  _.each(elems, function(elem) {
+    elem.addEventListener('click', function() {
+      var className = this.getAttribute('class');
+      if (className === 'selected') {
+        return;
+      }
+      var letter = this.innerHTML;
+      _.each(elems, function(elem) {
+        elem.setAttribute('class', '');
+      });
+      this.setAttribute('class', 'selected');
+      goToNewLetter(letter);
+    }, false);
+  });
 
 })();
