@@ -89,16 +89,17 @@
 
             "for( int i=1; i<18; i++ ){",
               "vec2 st = vUv - vec2(0.5);",
-
+            
               "float dist = sqrt(st.s*st.s+st.t*st.t/aspect);",
-
+            
               "rndUv.xy = vUv + (dist*maxblur*samplerBokehHex[i].xz*aspectcorrect);",
-
-              "col.r += texture2D( tColor, rndUv.xy - (st*dist/50.0) ).r;",
-              "col.ga += texture2D( tColor, rndUv.xy ).ga;",
-              "col.b += texture2D( tColor, rndUv.xy + (st*dist/50.0) ).b;",
-
+            
+              // "col.r += texture2D( tColor, rndUv.xy - (st*dist/50.0) ).r;",
+              "col += texture2D( tColor, rndUv.xy );",
+              // "col.b += texture2D( tColor, rndUv.xy + (st*dist/50.0) ).b;",
+            
             "}",
+            // "gl_FragColor = col;",
             "gl_FragColor = col/18.;",
             "gl_FragColor.rgb *= 1./gl_FragColor.a;",
 
