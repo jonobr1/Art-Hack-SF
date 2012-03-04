@@ -74,7 +74,7 @@
         'vec4 color = texture2D(map, vUv);',
         'dist = (color.r + color.g + color.b) / 3.0;',
 
-        'vec4 pos = vec4(position + position * dist, 1.0);',
+        'vec4 pos = vec4(position + normal * dist, 1.0);',
         'gl_Position = projectionMatrix * modelViewMatrix * pos;',
 
         '}'
@@ -98,7 +98,7 @@
       ].join('\n')
     });
 
-    letterMesh = createLetterMesh('A', this.displacementMaterial);
+    letterMesh = createLetterMesh('C', this.displacementMaterial);
     this.scene.add(letterMesh);
 
     reference_mesh = letterMesh;
@@ -267,19 +267,9 @@
 
       //lights
 
-      light = new THREE.DirectionalLight();
-      light.intensity = 0.1;
-      light.position.copy(camera.position);
-      light.castShadow = true;
-      light.shadowDarkness = 0.3;
-      light.shadowCameraVisible = true;
-
-      this.scene.add( light );
-
       // this.scene.add( geo );
 
       //particle emitter
-	
 
       // Post processing scene
   this.postScene = new THREE.Scene();
@@ -314,6 +304,17 @@
 
   }
 
+  // lights
+
+  light = new THREE.DirectionalLight();
+  light.position.copy(camera.position);
+  light.intensity = 0.1;
+  light.castShadow = true;
+  light.shadowDarkness = 0.3;
+  light.shadowCameraVisible = true;
+
+  this.scene.add( light );
+
   // End post processing scene
 
     },
@@ -347,21 +348,15 @@
 
        updateCamera.call(this);
 
-       var n, nx, ny, nz;
-       var nOffset = .1;
-       var nScl = .025;
-       var attenuation = .975;
+  		webcamPlane.material.uniforms.lastwebcam.texture = ping;
 
-
-		webcamPlane.material.uniforms.lastwebcam.texture = ping;
-
-		this.renderer.render( webcamScene, webcamCam, pong, true );
+  		this.renderer.render( webcamScene, webcamCam, pong, true );
 		
-		sphere.material.uniforms.map.texture = pong;
+  		letterMesh.material.uniforms.map.texture = pong;
 		
-		this.pingpong();
+  		this.pingpong();
 		
-       this.texture.needsUpdate = true;
+      this.texture.needsUpdate = true;
 
     }
 
@@ -498,15 +493,16 @@
     var bevelThickness = 0;
     var bevelSize = 0;
     var font = 'helvetiker';
-    var height = 2;
+    var height = 0;
     var size = 8;
-    var curves = 4;
+    var curves = 0;
     var weight = 'bold';
     var style = 'normal';
     var bend = false;
 
     var geometry = new THREE.TextGeometry(letter, {
 
+      amount: 0,
       size: size,
       curveSegments: curves,
       height: height,
@@ -521,14 +517,15 @@
       bend: bend,
 
       material: 0,
-      extrudeMaterial: 1
+      extrudeMaterial: 0
 
     });
 
     geometry.computeBoundingBox();
     geometry.computeVertexNormals();
 
-    var material = new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.SmoothShading } );
+    // var material = new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.SmoothShading } );
+    var material = mat;
     material.color = 0xffffff;
     material.shading = THREE.SmoothShading;
     var mesh = new THREE.Mesh(geometry, material);
