@@ -97,8 +97,6 @@
        //update particles
        // APP.getElapsedTime() += 1/60; // TODO
 
-       console.log(APP.getElapsedTime(), APP);
-
        var n, nx, ny, nz;
        var nOffset = .1;
        var nScl = .025;

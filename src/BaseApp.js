@@ -19,6 +19,8 @@
       debug: false
     });
 
+    var _this = this;
+
     this.startTime = Date.now();
 
     this.scene = new THREE.Scene();
@@ -34,6 +36,31 @@
 
     this.setup(params.debug);
 
+    var width = params.width || 640, height = params.height || 480;
+
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.ctx = this.canvas.getContext('2d');
+
+    this.video = document.createElement('video');
+    this.video.width = width;
+    this.video.height = height;
+    this.video.autoplay = true;
+
+    var hasUserMedia = navigator.webkitGetUserMedia ? true : false;
+    console.log('UserMedia is detected', hasUserMedia);
+
+    if (hasUserMedia) {
+
+      navigator.webkitGetUserMedia('video', function(stream){
+        _this.video.src = webkitURL.createObjectURL(stream);
+      }, function(error){
+        console.log('Failed to get a stream due to', error);
+      });
+
+    }
+
     return this;
 
     // this.animate();
@@ -44,7 +71,7 @@
 
     setup: function() {
 
-       console.log( "BaseApp: setup ...override to extend" );
+       console.log( 'BaseApp: setup ...override to extend' );
 
     },
 
@@ -67,6 +94,42 @@
       raf(function() {
         _this.animate();
       });
+
+
+      /**
+       * Webcam stuff!
+       */
+
+       var w = this.ctx.canvas.width, h = this.ctx.canvas.height;
+
+       this.ctx.drawImage(this.video, 0, 0, w, h);
+
+       var data = this.ctx.getImageData(0, 0, w, h).data;
+       var totalBrightness = 0;
+       var count = 0;
+
+       for(var i = 0; i < data.length; i+=4) {
+
+         var r = data[i];
+         var g = data[i+1];
+         var b = data[i+2];
+         var brightness = (3*r+4*g+b)>>>3;
+
+         totalBrightness+=brightness;
+         count++;
+
+         data[i] = brightness;
+         data[i+1] = brightness;
+         data[i+2] = brightness;
+
+       }
+
+       this.meter = Math.floor(totalBrightness / count);
+
+      /**
+       * WebGL Stuff!
+       */
+
       elapsedTime = Date.now() - this.startTime;
       this.update();
       this.draw();
