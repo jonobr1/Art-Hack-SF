@@ -16,6 +16,8 @@
 
     draw: function() {
 
+      console.log(this.meter);
+
       this.renderer.render( this.scene, camera, this.renderTarget.color, true );
       this.renderer.render( this.postScene, this.postCamera, null, true );
 
@@ -42,7 +44,7 @@
 
     };
 
-    this.postMaterial = new THREE.MeshShaderMaterial({
+    this.postMaterial = new THREE.ShaderMaterial({
 
         uniforms: postUniforms,
         vertexShader: [
@@ -187,20 +189,25 @@
        count += .001;
        var target = worms[0].geometry.vertices[0].position;
        var delta = new THREE.Vector3();
-       // for(var i=1; i<worms.length; i++){
+
+       var brightness = APP.meter;
+
         _.each(worms, function(worm, i) {
 
           if (i > 0) {
+
             delta.copy( worms[i].geometry.vertices[0].position );
             delta.subSelf( worms[i-1].geometry.vertices[0].position );
             delta.normalize();
             delta.multiplyScalar( .04 );
-            worms[i].vel.multiplyScalar( .91 );
-            worms[i].vel.subSelf( delta )
 
-            worms[i].update( i *.1);
+            worms[i].vel.multiplyScalar( .91 );
+            worms[i].vel.subSelf( delta );
+
+            worms[i].update( i * .1 );
           }
        });
+
        worms[0].update();
 
        this.camera.position.copy( target );
@@ -209,7 +216,9 @@
        var nOffset = .1;
        var nScl = .025;
        var attenuation = .975;
+
        for(var i=emitter.geometry.__webglParticleCount-1; i>=0; i--){
+
           p = emitter.particles[i];
 
           n = noise( p.pos.x, p.pos.y, p.pos.z );
@@ -269,7 +278,7 @@
       for(var i=0; i < length; i++){
 
         var c = new THREE.Color(color);
-        var mod = (1 - i / length);
+        var mod = Math.sqrt(1 - i / length);
 
         c.r *= mod;
         c.g *= mod;
@@ -293,9 +302,9 @@
   _.extend(Worm, {
 
     Colors: [
-   	  0xefefef,	
-	  0xcccccc,
-	  0x333333
+      0xb04a8f,
+      0x5e289f,
+      0x903d96
     ]
 
   })
@@ -304,13 +313,14 @@
 
     update: function(offset) {
 
+      // this.vel.multiplyScalar( APP.meter );
 
       offset = offset || 0;
-      for(var i=this.geometry.vertices.length-1; i>=1; i--){
+      for(var i=this.geometry.vertices.length-1; i>=1; i--) {
          this.geometry.vertices[i].position.multiplyScalar(.6);
-         this.geometry.vertices[i].position.x += this.geometry.vertices[i-1].position.x *.4;
-         this.geometry.vertices[i].position.y += this.geometry.vertices[i-1].position.y *.4;
-         this.geometry.vertices[i].position.z += this.geometry.vertices[i-1].position.z *.4;
+         this.geometry.vertices[i].position.x += this.geometry.vertices[i-1].position.x * 0.4;
+         this.geometry.vertices[i].position.y += this.geometry.vertices[i-1].position.y * 0.4;
+         this.geometry.vertices[i].position.z += this.geometry.vertices[i-1].position.z * 0.4;
       }
 
       var n, nx, ny, nz;
@@ -318,15 +328,14 @@
       var nScl = .25;
       var attenuation = .75;
       var p = this.geometry.vertices[0].position;
-      n = noise( p.x, p.y, p.z );
-      nx = n - noise( p.x+nOffset + APP.getElapsedTime() + offset, p.y, p.z );
-      ny = n - noise( p.x, p.y+nOffset + APP.getElapsedTime() + offset, p.z );
-      nz = n - noise( p.x, p.y, p.z+nOffset + APP.getElapsedTime() + offset );
+
+      // this.vel.multiplyScalar(APP.meter);//.addSelf({ x: nx, y: ny, z: nx })
 
       this.geometry.vertices[0].position.addSelf( this.vel );
-      this.geometry.vertices[0].position.addSelf( {x: nx, y: ny, z: nx });
       this.geometry.__dirtyVertices = true;
+
    }
+
 });
 
 var worms = [];

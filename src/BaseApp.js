@@ -48,10 +48,9 @@
     this.video.height = height;
     this.video.autoplay = true;
 
-    var hasUserMedia = navigator.webkitGetUserMedia ? true : false;
-    console.log('UserMedia is detected', hasUserMedia);
+    this.hasUserMedia = navigator.webkitGetUserMedia ? true : false;
 
-    if (hasUserMedia) {
+    if (this.hasUserMedia) {
 
       navigator.webkitGetUserMedia('video', function(stream){
         _this.video.src = webkitURL.createObjectURL(stream);
@@ -101,31 +100,43 @@
        * Webcam stuff!
        */
 
-       var w = this.ctx.canvas.width, h = this.ctx.canvas.height;
+       if (this.hasUserMedia) {
 
-       this.ctx.drawImage(this.video, 0, 0, w, h);
+         var w = this.ctx.canvas.width, h = this.ctx.canvas.height;
 
-       var data = this.ctx.getImageData(0, 0, w, h).data;
-       var totalBrightness = 0;
-       var count = 0;
+         this.ctx.drawImage(this.video, 0, 0, w, h);
 
-       for(var i = 0; i < data.length; i+=4) {
+         var data = this.ctx.getImageData(0, 0, w, h).data;
+         var totalBrightness = 0;
+         var count = 0;
 
-         var r = data[i];
-         var g = data[i+1];
-         var b = data[i+2];
-         var brightness = (3*r+4*g+b)>>>3;
+         for(var i = 0; i < data.length; i+=4) {
 
-         totalBrightness+=brightness;
-         count++;
+           var r = data[i];
+           var g = data[i+1];
+           var b = data[i+2];
+           var brightness = (3*r+4*g+b)>>>3;
 
-         data[i] = brightness;
-         data[i+1] = brightness;
-         data[i+2] = brightness;
+           totalBrightness+=brightness;
+           count++;
+
+           data[i] = brightness;
+           data[i+1] = brightness;
+           data[i+2] = brightness;
+
+         }
+
+         this.meter = Math.floor(totalBrightness / count) / 255;
+
+       } else {
+
+         // Nope
+
+         this.meter = 1.0;
 
        }
 
-       this.meter = Math.floor(totalBrightness / count);
+       // console.log(this.meter);
 
       /**
        * WebGL Stuff!
