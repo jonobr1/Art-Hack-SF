@@ -153,13 +153,26 @@
      var color = Worm.Colors[Math.floor(Math.random() * Worm.Colors.length)];
 
      this.geometry = parameters.geometry || new THREE.Geometry();
-      for(var i=0; i < 50; i++){
+     var length = parameters.length || 50;
+
+      for(var i=0; i < length; i++){
+
+        var c = new THREE.Color(color);
+        var mod = (1 - i / length);
+
+        c.r *= mod;
+        c.g *= mod;
+        c.b *= mod;
+
         this.geometry.vertices.push(new THREE.Vertex(new THREE.Vector3()));
-        this.geometry.colors.push(new THREE.Color(color));
+        this.geometry.colors.push(c);
       }
      this.geometry.dynamic = true;
 
-     this.material = parameters.material || new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1.0, linewidth: Math.floor(Math.random() * 5) });
+     this.material = parameters.material || new THREE.LineBasicMaterial({
+       opacity: 1.0,
+       linewidth: Math.floor(Math.random() * 5)
+      });
      this.material.vertexColors = true;
 
      this.mesh = new THREE.Line(this.geometry, this.material);
@@ -203,7 +216,7 @@
       this.geometry.vertices[0].position.addSelf( this.vel );
       this.geometry.vertices[0].position.addSelf( {x: nx, y: ny, z: nx });
       this.geometry.__dirtyVertices = true;
-      this.geometry.__dirtyColors = true;
+      // this.geometry.__dirtyColors = true;
 
     }
 
