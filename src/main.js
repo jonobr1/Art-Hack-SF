@@ -11,6 +11,9 @@
   var count = 0;
   var worms = [];
 
+	//camera process
+	var ping, pong, webcamRT, webcamScene, webcamPlane, webcamCam, webcamRenderer;
+
   _.extend(BaseApp.prototype, {
 
     draw: function() {
@@ -86,7 +89,7 @@
       'void main() {',
 
       // 'gl_FragColor = texture2D(map, vUv) * vec4(vec3(dist), 1.);',
-      'gl_FragColor = vec4(vec3(dist), 1.);',
+      'gl_FragColor = vec4(vec3(dist*dist*dist*1.1), 1.);',
 
       '}'
 
@@ -167,8 +170,78 @@
             ].join("\n")
 
       });
+
+
+	//camera process
+	ping = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
+	pong = new THREE.WebGLRenderTarget( 256, 256 );// this.canvas.width, this.canvas.height );
+	webcamRT = ping;
+	
+	
+	
+    this.webcamProcess = new THREE.ShaderMaterial({
+
+        uniforms: {
+	        'webcam': { type: 't', value: 0, texture: this.texture },
+	        'lastwebcam': { type: 't', value: 1, texture: webcamRT },
+			'smoothness': { type: 'f', value: .7 },
+		},
+		
+        vertexShader: [
+
+            "varying vec2 vUv;",
+
+            "void main() {",
+
+                "vUv = vec2( uv.x, 1.0 - uv.y );",
+                "gl_Position = vec4( position, 1.0 );//projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+
+            "}"
+
+        ].join("\n"),
+
+        fragmentShader: [
+
+        "uniform sampler2D webcam;",
+        "uniform sampler2D lastwebcam;",
+
+        "uniform float smoothness;",
+
+
+
+        "varying vec2 vUv;",
+
+		"void main() {",
+			// "vec4 col = texture2D( tColor, vUv.xy );",
+			"gl_FragColor = vec4(texture2D( webcam, vUv.xy ).xyz*(1.-smoothness) + texture2D( lastwebcam, vUv.xy ).xyz*smoothness, 1.) ;",
+		"}"
+
+            ].join("\n")
+
+      });
+	
+	webcamCam = new THREE.OrthographicCamera ( -0.5, 0.5 , -0.5, 0.5, 0.001, 1000 );
+	webcamScene = new THREE.Scene();
+	webcamPlane = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), this.webcamProcess );
+	webcamPlane.doubleSided = true;
+	
+	webcamPlane.material.uniforms.lastwebcam.texture = pong;
+	
+	webcamScene = new THREE.Scene();
+	webcamScene.add( webcamCam );
+	webcamScene.add( webcamPlane );
+	this.renderer.render( webcamScene, webcamCam, pong, true );
+	
+		
+		console.log( webcamPlane );
     },
 
+	pingpong: function() {
+		webcamRT = ping;
+		ping = pong;
+		pong = webcamRT;
+	},
+	
     setup: function(debug) {
 
       if (debug) {
@@ -204,10 +277,7 @@
       // this.scene.add( geo );
 
       //particle emitter
-      emitter = new LabParticleEmitter({ scene: this.scene,
-                                       renderer: this.renderer,
-                                       maxParticleCount: 10000,
-                                       camera: camera });
+	
 
       // Post processing scene
   this.postScene = new THREE.Scene();
@@ -274,25 +344,15 @@
        var nScl = .025;
        var attenuation = .975;
 
-       for(var i=emitter.geometry.__webglParticleCount-1; i>=0; i--){
 
-          p = emitter.particles[i];
+		webcamPlane.material.uniforms.lastwebcam.texture = ping;
 
-          n = noise( p.pos.x, p.pos.y, p.pos.z );
-          nx = n - noise( p.pos.x+nOffset, p.pos.y, p.pos.z );
-          ny = n - noise( p.pos.x, p.pos.y+nOffset, p.pos.z );
-          nz = n - noise( p.pos.x, p.pos.y, p.pos.z+nOffset );
-
-          p.vel.multiplyScalar( attenuation );
-
-          p.vel.addSelf( {x: nx*nScl, y: ny*nScl, z: nz*nScl });
-          p.pos.addSelf( emitter.particles[i].vel );
-
-          if(APP.getElapsedTime() > p.birth + p.lifespan){
-             emitter.removeParticle( i );
-          }
-       }
-
+		this.renderer.render( webcamScene, webcamCam, pong, true );
+		
+		sphere.material.uniforms.map.texture = pong;
+		
+		this.pingpong();
+		
        this.texture.needsUpdate = true;
 
     }

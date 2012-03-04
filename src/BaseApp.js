@@ -74,7 +74,7 @@
 
     setup: function() {
 
-       console.log( 'BaseApp: setup ...override to extend' );
+       // console.log( 'BaseApp: setup ...override to extend' );
 
     },
 
