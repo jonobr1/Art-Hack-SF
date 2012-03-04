@@ -1,5 +1,6 @@
-(function() {
 
+
+(function() {
   //
 
   var light;
@@ -7,7 +8,9 @@
   var bStats =  true;
   var camera;
   var letterMesh, _letterMesh, reference_mesh;
-  var cameraPosition = new THREE.Vector3(), cameraLookAt = new THREE.Vector3();
+  var prevMesh;
+  var cameraPosition = new THREE.Vector3(), cameraLookAt = new THREE.Vector3(), _cameraLookAt = new THREE.Vector3();
+  var container = new THREE.Object3D();
   var emitter;
   var count = 0;
   var worms = [];
@@ -98,8 +101,15 @@
       ].join('\n')
     });
 
-    letterMesh = createLetterMesh('C', this.displacementMaterial);
-    this.scene.add(letterMesh);
+    this.scene.add(container);
+
+    letterMesh = createLetterMesh('A', this.displacementMaterial);
+
+    cameraLookAt.copy( letterMesh.position );
+    _cameraLookAt.copy( cameraLookAt );
+    cameraPosition.copy( letterMesh.position ).addSelf( new THREE.Vector3(0, 0, 10) );
+
+    container.add(letterMesh);
 
     reference_mesh = letterMesh;
 
@@ -236,7 +246,6 @@
 	this.renderer.render( webcamScene, webcamCam, pong, true );
 	
 		
-		console.log( webcamPlane );
     },
 
 	pingpong: function() {
@@ -289,7 +298,7 @@
 
   var material = new THREE.LineBasicMaterial({
      opacity: 1.0,
-     linewidth: Math.floor(Math.random() * 7)
+     linewidth: 1
     });
 
   for(var i=0; i<100; i++){
@@ -298,7 +307,7 @@
       material: material
     });
      worms.push( worm );
-     worm.reset( reference_mesh );
+     worm.reset( reference_mesh.children[0] );
 
      this.scene.add( worm.mesh );
 
@@ -311,7 +320,7 @@
   light.intensity = 0.1;
   light.castShadow = true;
   light.shadowDarkness = 0.3;
-  light.shadowCameraVisible = true;
+  light.shadowCameraVisible = false;
 
   this.scene.add( light );
 
@@ -352,7 +361,7 @@
 
   		this.renderer.render( webcamScene, webcamCam, pong, true );
 		
-  		letterMesh.material.uniforms.map.texture = pong;
+  		letterMesh.children[0].material.uniforms.map.texture = pong;
 		
   		this.pingpong();
 		
@@ -364,11 +373,15 @@
 
   function updateCamera() {
 
-    camera.position.x += (cameraPosition.x - camera.position.x) * 0.125;
-    camera.position.y += (cameraPosition.y - camera.position.y) * 0.125;
-    camera.position.z += (cameraPosition.z - camera.position.z) * 0.125;
+    camera.position.x += (cameraPosition.x - camera.position.x) * 0.0625;
+    camera.position.y += (cameraPosition.y - camera.position.y) * 0.0625;
+    camera.position.z += (cameraPosition.z - camera.position.z) * 0.0625;
 
-    camera.lookAt(cameraLookAt);
+    _cameraLookAt.x += (cameraLookAt.x - _cameraLookAt.x) * 0.0625;
+    _cameraLookAt.y += (cameraLookAt.y - _cameraLookAt.y) * 0.0625;
+    _cameraLookAt.z += (cameraLookAt.z - _cameraLookAt.z) * 0.0625;
+
+    camera.lookAt(_cameraLookAt);
 
   }
 
@@ -459,7 +472,7 @@
 
         if (last.x === first.x && last.y === first.y && last.z === first.z) {
           this.dead = true;
-          this.reset(mesh);
+          this.reset(mesh.children[0]);
         }
 
       }
@@ -532,18 +545,50 @@
 
     var height = ( geometry.boundingBox.max.y - geometry.boundingBox.min.y ) 
 
-    cameraLookAt.copy( mesh.position );
-    cameraPosition.copy( mesh.position ).addSelf( new THREE.Vector3(0, 0, 10) );
-
     mesh.position.x = - 0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
     mesh.position.y = 0.5 * height;
     mesh.position.z = 0;
-
+    
     mesh.rotation.x = Math.PI;
+
     mesh.receiveShadow = true;
     mesh.castShadow = true;
 
-    return mesh;
+    var obj = new THREE.Object3D();
+    obj.add(mesh);
+
+    return obj;
+
+  }
+
+  function goToNewLetter(letter) {
+
+    if (prevMesh) {
+      container.remove(prevMesh);
+    }
+
+    _letterMesh = createLetterMesh.call(APP, letter, APP.displacementMaterial);
+
+    var amt = -100;
+    var off = 0;
+    var randomPointInSpace = new THREE.Vector3(0, 0, Math.random() * amt - off).addSelf(letterMesh.position);
+
+    _letterMesh.position.copy(randomPointInSpace);
+    cameraLookAt.copy(randomPointInSpace);
+    cameraPosition.copy(randomPointInSpace).addSelf(new THREE.Vector3(0, 0, 10));
+
+    container.add(_letterMesh);
+
+    prevMesh = letterMesh;
+    letterMesh = reference_mesh = _letterMesh;
+
+    console.log(worms);
+
+    _.defer(function() {
+      _.each(worms, function(worm) {
+        worm.reset(reference_mesh.children[0]);
+      });
+    });
 
   }
 
@@ -554,7 +599,7 @@
     var randFace = face || mesh.geometry.faces[ BaseApp.randomInt( 0, mesh.geometry.faces.length-1) ];
     var pos = THREE.GeometryUtils.randomPointInFace( randFace, mesh.geometry, true ); 
 
-    return mesh.matrix.multiplyVector3(pos);
+    return mesh.parent.matrix.multiplyVector3(mesh.matrix.multiplyVector3(pos));
 
   }
 
@@ -571,5 +616,21 @@
   function map(v, i1, i2, o1, o2) {
     return o1 + (o2 - o1) * ((v - i1) / (i2 - i1));
   }
+
+  var elems = document.querySelectorAll('li a');
+  _.each(elems, function(elem) {
+    elem.addEventListener('click', function() {
+      var className = this.getAttribute('class');
+      if (className === 'selected') {
+        return;
+      }
+      var letter = this.innerHTML;
+      _.each(elems, function(elem) {
+        elem.setAttribute('class', '');
+      });
+      this.setAttribute('class', 'selected');
+      goToNewLetter(letter);
+    }, false);
+  });
 
 })();
