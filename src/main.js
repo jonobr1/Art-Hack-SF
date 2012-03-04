@@ -141,7 +141,12 @@
 
       //load some geometry
       geo = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 1 ), new THREE.MeshNormalMaterial({ shading: THREE.FlatShading }) );
-      this.scene.add( geo );
+      // geo.geometry.computeNormals();
+      geo.geometry.computeVertexNormals();
+      geo.geometry.computeFaceNormals();
+      geo.geometry.computeCentroids();
+
+      // this.scene.add( geo );
 
       //particle emitter
       emitter = new LabParticleEmitter({ scene: this.scene,
