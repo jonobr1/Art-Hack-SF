@@ -94,9 +94,6 @@
 
        this.camera.position.copy( target );
 
-       //update particles
-       // APP.getElapsedTime() += 1/60; // TODO
-
        var n, nx, ny, nz;
        var nOffset = .1;
        var nScl = .025;
@@ -146,51 +143,71 @@
 
   });
 
-  function Worm( parameters ){
+  var Worm = function( parameters ) {
+
      parameters = parameters || {};
 
      this.vel = parameters.vel || new THREE.Vector3( BaseApp.randomRange(-.1, .1), BaseApp.randomRange(-.1, .1), BaseApp.randomRange(-.1, .1) );
      this.speed = 5;
 
+     var color = Worm.Colors[Math.floor(Math.random() * Worm.Colors.length)];
+
      this.geometry = parameters.geometry || new THREE.Geometry();
-     //   this.generateGeometry();
-     for(var i=0; i<50; i++){
-        this.geometry.vertices.push( new THREE.Vertex( new THREE.Vector3()));
-     }
+      for(var i=0; i < 50; i++){
+        this.geometry.vertices.push(new THREE.Vertex(new THREE.Vector3()));
+        this.geometry.colors.push(new THREE.Color(color));
+      }
      this.geometry.dynamic = true;
 
-     this.material = parameters.material || new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1.0, linewidth: 2 });
-  //   this.material.vertexColors = true;
+     this.material = parameters.material || new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1.0, linewidth: Math.floor(Math.random() * 5) });
+     this.material.vertexColors = true;
 
      this.mesh = new THREE.Line(this.geometry, this.material);
-  //   this.mesh.position = position.clone();
 
+  };
 
+  _.extend(Worm, {
 
-     this.update = function( offset ){
-        offset = offset || 0;
-        for(var i=this.geometry.vertices.length-1; i>=1; i--){
-           this.geometry.vertices[i].position.multiplyScalar(.6);
-           this.geometry.vertices[i].position.x += this.geometry.vertices[i-1].position.x *.4;
-           this.geometry.vertices[i].position.y += this.geometry.vertices[i-1].position.y *.4;
-           this.geometry.vertices[i].position.z += this.geometry.vertices[i-1].position.z *.4;
-        }
+    Colors: [
+      0xefefef,
+      0xffff99,
+      0x4C6D2F,
+      0xD30C04,
+      0x3EB6FF
+    ]
 
-        var n, nx, ny, nz;
-        var nOffset = .1;
-        var nScl = .25;
-        var attenuation = .75;
-        var p = this.geometry.vertices[0].position;
-        n = noise( p.x, p.y, p.z );
-        nx = n - noise( p.x+nOffset + APP.getElapsedTime() + offset, p.y, p.z );
-        ny = n - noise( p.x, p.y+nOffset + APP.getElapsedTime() + offset, p.z );
-        nz = n - noise( p.x, p.y, p.z+nOffset + APP.getElapsedTime() + offset );
+  })
 
-        this.geometry.vertices[0].position.addSelf( this.vel );
-        this.geometry.vertices[0].position.addSelf( {x: nx, y: ny, z: nx });
-        this.geometry.__dirtyVertices = true;
-     }
-  }
+  _.extend(Worm.prototype, {
+
+    update: function(offset) {
+
+      offset = offset || 0;
+      for(var i=this.geometry.vertices.length-1; i>=1; i--){
+         this.geometry.vertices[i].position.multiplyScalar(.6);
+         this.geometry.vertices[i].position.x += this.geometry.vertices[i-1].position.x *.4;
+         this.geometry.vertices[i].position.y += this.geometry.vertices[i-1].position.y *.4;
+         this.geometry.vertices[i].position.z += this.geometry.vertices[i-1].position.z *.4;
+      }
+
+      var n, nx, ny, nz;
+      var nOffset = .1;
+      var nScl = .25;
+      var attenuation = .75;
+      var p = this.geometry.vertices[0].position;
+      n = noise( p.x, p.y, p.z );
+      nx = n - noise( p.x+nOffset + APP.getElapsedTime() + offset, p.y, p.z );
+      ny = n - noise( p.x, p.y+nOffset + APP.getElapsedTime() + offset, p.z );
+      nz = n - noise( p.x, p.y, p.z+nOffset + APP.getElapsedTime() + offset );
+
+      this.geometry.vertices[0].position.addSelf( this.vel );
+      this.geometry.vertices[0].position.addSelf( {x: nx, y: ny, z: nx });
+      this.geometry.__dirtyVertices = true;
+      this.geometry.__dirtyColors = true;
+
+    }
+
+  });
 
   function randomPointOnMesh( mesh, face ){
   //   if(this.isLoaded){
