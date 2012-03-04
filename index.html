@@ -1,16 +1,92 @@
 <!doctype html>
   <head>
-    <title>Art Hack SF</title>
+    <title>Letter Spacing</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Terminal+Dosis' rel='stylesheet' type='text/css'>
     <style type="text/css">
 
+    *{
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: 'Terminal Dosis';
-      font-weight: bold;
+      font-family: 'Terminal Dosis', sans-serif;
+    }
+
+    #title {
+      background-color: black;
+      width: 100%;
+      height: 100%;
+/*      padding-bottom: 25px;*/
+
+
+    }
+
+    #title h1, h2 {
+      margin-left: 20px;
+      color: #ffffff;
+
+    }
+
+    #title h1{
+      margin-top: 20px;
+      letter-spacing: 1px;
+      font-size: 16pt;
+
+    }
+
+    #title h2{
+    margin-top: 2px;
+    font-size: 10pt;
+
+    }
+
+    ul {
+      list-style-type: none;
+      vertical-align: baseline;
+    }
+
+    #letters {
+      display: block;
+      float: right;
+      margin-right: 20px;
+    }
+
+    #desc {
+      display: block;
+    }
+
+    h3, p {
+      color: #b3b3b3;
+      margin-right: 20%;
+      font-size: 10pt;
+    }
+
+    .column {
+      float: left;
+      height: 100%;
+      width: 40%;
+      padding: 0;
+      margin: 0;
+      position: relative;
+      display: block;
+    }
+    .secondary {
+      margin-top: 30px;
     }
 
     #letters {
       position: fixed;
       right: 20px;
+      top: 120px;
+
+      -webkit-transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860); 
+         -moz-transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860); 
+          -ms-transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860); 
+           -o-transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860); 
+              transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860); /* easeInOutCirc */
+
     }
     #letters ul {
       list-style: none;
@@ -19,6 +95,15 @@
       padding: 2px 0;
       text-align: center;
     }
+    #title a:link, #title a:visited {
+      text-decoration: none;
+      color: #fff;
+    }
+
+    #title a:hover, #title a:active {
+      color: #ff0048;
+    }
+
     #letters ul li a:link, #letters ul li a:visited {
       text-decoration: none;
       color: #858585;
@@ -31,10 +116,69 @@
     #letters ul li a.selected {
       color: #000;
     }
+    #links {
+      float: right;
+      width: 100px;
+      text-align: left;
+    }
+    #hider {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100px;
+      padding-bottom: 100px;
+
+      -webkit-transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860);
+         -moz-transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860);
+          -ms-transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860);
+           -o-transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860);
+              transition: all 500ms cubic-bezier(0.785, 0.135, 0.150, 0.860);
+
+    }
+
+    .hidden {
+      margin-top: -100px;
+    }
+
+    #hider:hover {
+
+      margin-top: 0;
+
+    }
 
     </style>
   </head>
 <body>
+
+  <div id="hider">
+    <div id="title">
+      <div class="column">
+        <h1>
+          LETTER SPACING
+        </h1>
+        <h2>
+          Click on the alphabet to explore letterforms
+        </h2>
+      </div>
+      <div class="column secondary" id="desc">
+        <h3>ABOUT</h3>
+        <p>
+          This is an opensource HTML5/WebGL experiment created at <a href="#">Art Hack SF</a><br/>
+          Created with love by <a href="http://jonobr1.com">jonobr1</a>, <a href="http://vimeo.com/laserstorm">Lars Berg</a>, <a href="http://estzi.com">Estzi</a>, <a href="http://aleksandarrodic.com">ARodic</a>, and <a href="http://nicklesh.com">nicklesh</a>
+        </p>
+      </div>
+      <div id="links" class="column secondary">
+        <h3>&nbsp;</h3>
+        <p>
+          <a href="http://nicklesh.dropmark.com/31397">Inspiration</a><br/>
+          <a href="http://github.com/jonobr1/Art-Hack-SF">View Source</a>
+        </p>
+      </div>
+      <br style="width:0; height:0; display:block; clear:both; line-height:0;"/>
+
+    </div>
+  </div>
 
   <div id="letters">
     <ul>
@@ -92,6 +236,11 @@
 
     var APP = window.APP = new BaseApp({ debug: false });
     APP.animate();
+
+    setTimeout(function() {
+      document.getElementById('hider').setAttribute('class', 'hidden');
+    }, 1000);
+
 
   </script>
 
