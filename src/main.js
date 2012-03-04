@@ -95,7 +95,7 @@
       ].join('\n')
     });
 
-    letterMesh = createLetterMesh('A', this.displacementMaterial);
+    letterMesh = createLetterMesh('C', this.displacementMaterial);
     this.scene.add(letterMesh);
 
     reference_mesh = letterMesh;
@@ -194,22 +194,13 @@
 
       //lights
 
-      light = new THREE.DirectionalLight();
-      light.intensity = 0.1;
-      light.position.copy(camera.position);
-      light.castShadow = true;
-      light.shadowDarkness = 0.3;
-      light.shadowCameraVisible = true;
-
-      this.scene.add( light );
-
       // this.scene.add( geo );
 
       //particle emitter
-      emitter = new LabParticleEmitter({ scene: this.scene,
-                                       renderer: this.renderer,
-                                       maxParticleCount: 10000,
-                                       camera: camera });
+      // emitter = new LabParticleEmitter({ scene: this.scene,
+      //                                  renderer: this.renderer,
+      //                                  maxParticleCount: 10000,
+      //                                  camera: camera });
 
       // Post processing scene
   this.postScene = new THREE.Scene();
@@ -244,6 +235,17 @@
 
   }
 
+  // lights
+
+  light = new THREE.DirectionalLight();
+  light.position.copy(camera.position);
+  light.intensity = 0.1;
+  light.castShadow = true;
+  light.shadowDarkness = 0.3;
+  light.shadowCameraVisible = true;
+
+  this.scene.add( light );
+
   // End post processing scene
 
     },
@@ -277,29 +279,29 @@
 
        updateCamera.call(this);
 
-       var n, nx, ny, nz;
-       var nOffset = .1;
-       var nScl = .025;
-       var attenuation = .975;
-
-       for(var i=emitter.geometry.__webglParticleCount-1; i>=0; i--){
-
-          p = emitter.particles[i];
-
-          n = noise( p.pos.x, p.pos.y, p.pos.z );
-          nx = n - noise( p.pos.x+nOffset, p.pos.y, p.pos.z );
-          ny = n - noise( p.pos.x, p.pos.y+nOffset, p.pos.z );
-          nz = n - noise( p.pos.x, p.pos.y, p.pos.z+nOffset );
-
-          p.vel.multiplyScalar( attenuation );
-
-          p.vel.addSelf( {x: nx*nScl, y: ny*nScl, z: nz*nScl });
-          p.pos.addSelf( emitter.particles[i].vel );
-
-          if(APP.getElapsedTime() > p.birth + p.lifespan){
-             emitter.removeParticle( i );
-          }
-       }
+       // var n, nx, ny, nz;
+       // var nOffset = .1;
+       // var nScl = .025;
+       // var attenuation = .975;
+       // 
+       // for(var i=emitter.geometry.__webglParticleCount-1; i>=0; i--){
+       // 
+       //    p = emitter.particles[i];
+       // 
+       //    n = noise( p.pos.x, p.pos.y, p.pos.z );
+       //    nx = n - noise( p.pos.x + nOffset, p.pos.y, p.pos.z );
+       //    ny = n - noise( p.pos.x, p.pos.y + nOffset, p.pos.z );
+       //    nz = n - noise( p.pos.x, p.pos.y, p.pos.z + nOffset );
+       // 
+       //    p.vel.multiplyScalar( attenuation );
+       // 
+       //    p.vel.addSelf( {x: nx*nScl, y: ny*nScl, z: nz*nScl });
+       //    p.pos.addSelf( emitter.particles[i].vel );
+       // 
+       //    if(APP.getElapsedTime() > p.birth + p.lifespan){
+       //       emitter.removeParticle( i );
+       //    }
+       // }
 
        this.texture.needsUpdate = true;
 
