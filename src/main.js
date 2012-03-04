@@ -330,7 +330,7 @@
 
     update: function() {
 
-       if(bStats) stats.update();
+       if(APP.debug) stats.update();
 
        // geo.rotation.x += .005;
        // geo.rotation.y += .0005;
@@ -507,7 +507,7 @@
     var bevelSize = 0;
     var font = 'helvetiker';
     var height = 0;
-    var size = 8;
+    var size = 5;
     var curves = 0;
     var weight = 'bold';
     var style = 'normal';
@@ -569,9 +569,9 @@
 
     _letterMesh = createLetterMesh.call(APP, letter, APP.displacementMaterial);
 
-    var amt = -100;
+    var amt = -50;
     var off = 0;
-    var randomPointInSpace = new THREE.Vector3(0, 0, Math.random() * amt - off).addSelf(letterMesh.position);
+    var randomPointInSpace = new THREE.Vector3(0, 0, amt).addSelf(letterMesh.position);
 
     _letterMesh.position.copy(randomPointInSpace);
     cameraLookAt.copy(randomPointInSpace);
@@ -581,8 +581,6 @@
 
     prevMesh = letterMesh;
     letterMesh = reference_mesh = _letterMesh;
-
-    console.log(worms);
 
     _.defer(function() {
       _.each(worms, function(worm) {

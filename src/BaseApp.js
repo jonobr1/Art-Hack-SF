@@ -66,6 +66,15 @@
 
     this.setup(params.debug);
 
+    window.addEventListener('resize', function() {
+    
+      var width = window.innerWidth;
+      var height = window.innerHeight;
+    
+      _this.renderer.setSize(width, height);
+    
+    }, false);
+
     return this;
 
     // this.animate();
