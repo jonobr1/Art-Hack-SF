@@ -12,6 +12,7 @@
 
     body {
       font-family: 'Terminal Dosis', sans-serif;
+      font-weight: bold;
     }
 
     #title {
@@ -57,7 +58,7 @@
       display: block;
     }
 
-    h3, p {
+    h3, p, .gray {
       color: #b3b3b3;
       margin-right: 20%;
       font-size: 10pt;
@@ -158,7 +159,8 @@
           LETTER SPACING
         </h1>
         <h2>
-          Click on the alphabet to explore letterforms
+          Click on the alphabet to explore letterforms<br/>
+					<span class="gray">For use with webcam input enable on <a href="https://sites.google.com/site/webrtc/running-the-demos">WebRTC</a></span>
         </h2>
       </div>
       <div class="column secondary" id="desc">
@@ -239,7 +241,7 @@
 
     setTimeout(function() {
       document.getElementById('hider').setAttribute('class', 'hidden');
-    }, 1000);
+    }, 2000);
 
 
   </script>

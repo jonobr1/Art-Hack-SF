@@ -299,7 +299,7 @@
 
   var material = new THREE.LineBasicMaterial({
      opacity: 1.0,
-     linewidth: 1
+     linewidth: 2
     });
 
   for(var i=0; i<100; i++){
