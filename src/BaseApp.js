@@ -21,20 +21,22 @@
 
     var _this = this;
 
+    this.aspectRatio = window.innerWidth / window.innerHeight;
+
     this.startTime = Date.now();
 
     this.scene = new THREE.Scene();
 
-    this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+    this.camera = new THREE.PerspectiveCamera( 45, this.aspectRatio, 1, 2000 );
     this.scene.add( this.camera );
 
     this.renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0xdddddd, clearAlpha: 1.0 } );
     this.renderer.setSize( window.innerWidth, window.innerHeight );
     this.gl = this.renderer._gl;
     this.renderer.shadowMapEnabled = true;
-    // this.renderer.shadowMapSoft = true;
 
-    document.body.appendChild(this.renderer.domElement);
+    this.renderer.id = 'webgl';
+    document.getElementById('container').appendChild(this.renderer.domElement);
 
     var width = params.width || 640, height = params.height || 480;
 
@@ -67,17 +69,33 @@
     this.setup(params.debug);
 
     window.addEventListener('resize', function() {
-    
-      var width = window.innerWidth;
-      var height = window.innerHeight;
-    
+
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+
+      var width = w;
+      var height = h;
+
+
+      if (width > height) {
+        height = width / _this.aspectRatio;
+        if (width < w) {
+          width = w;
+          height = width / _this.aspectRatio;
+        }
+      } else {
+        width = height * _this.aspectRatio;
+        if (height < h) {
+          height = h;
+          width = height * _this.aspectRatio;
+        }
+      }
+
       _this.renderer.setSize(width, height);
-    
+
     }, false);
 
     return this;
-
-    // this.animate();
 
   };
 
